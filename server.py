@@ -1,4 +1,6 @@
 import falcon
+import falcon.asgi
+
 import requests
 import json
 import yaml
@@ -88,7 +90,7 @@ class chk:
             return False
 
 class search:
-    def on_get(self, req, resp):
+    async def on_get(self, req, resp):
         try:
             params = req.params
             query = params["q"]
@@ -98,10 +100,11 @@ class search:
             resp.body = json.dumps(result, ensure_ascii=False)
             return
 
+        dbglog("send request to SearXNG.")
+        dbglog(f"query={query}")
+
         try:
-            dbglog("send request to SearXNG.")
-            dbglog(f"query={query}")
-            upstream_request = requests.get(f"http://localhost:8888/search?q={query}&format=json")
+            upstream_request = requests.get(f"http://searxng:8080/search?q={query}&format=json")
         except Exception as e:
             result = {"error": "UPSTREAM_ENGINE_ERROR"}
             resp.status = falcon.HTTP_500
@@ -154,7 +157,7 @@ except Exception as e:
     msg.fetal_error(str(e))
     sys.exit(1)
 
-app = falcon.API()
+app = falcon.asgi.App()
 app.add_route('/search', search())
 
 def dbglog(message):
@@ -166,5 +169,5 @@ if __name__ == "__main__":
     dbglog("Debug mode!!!!")
 
     from wsgiref import simple_server
-    httpd = simple_server.make_server("127.0.0.1", 8000, app)
+    httpd = simple_server.make_server("0.0.0.0", 8000, app)
     httpd.serve_forever()

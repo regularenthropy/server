@@ -1,0 +1,4 @@
+falcon
+uvicorn
+tldextract
+pyyaml
