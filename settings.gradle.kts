@@ -1,1 +1,0 @@
-rootProject.name = "org.freasearch.if-server"
