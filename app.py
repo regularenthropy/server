@@ -150,7 +150,7 @@ try:
         detect_words = load_detect_words["words"]
 
 except Exception as e:
-    msg.error("[ERROR] faild to load lists")
+    msg.error("faild to load lists")
     msg.fetal_error(str(e))
     sys.exit(1)
 
@@ -164,10 +164,6 @@ def dbglog(message):
 if __name__ == "__main__":
     msg.info("Starting server....")
     dbglog("Debug mode!!!!")
-    dbglog(f"block_domains={str(block_domains)}")
-    dbglog(f"untrusted_domains={str(untrusted_domains)}")
-    dbglog(f"block_words={str(block_words)}")
-    dbglog(f"detect_words={str(detect_words)}")
 
     from wsgiref import simple_server
     httpd = simple_server.make_server("127.0.0.1", 8000, app)
