@@ -1,3 +1,23 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+'''
+Frea Search is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Frea Search is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with Frea Search. If not, see < http://www.gnu.org/licenses/ >.
+
+(C) 2022  Frea Search, Ablaze
+                   nexryai <gnomer@tuta.io>
+'''
+
 import falcon
 import falcon.asgi
 import uvicorn
@@ -6,8 +26,13 @@ import requests
 import json
 import yaml
 import tldextract
+import hashlib
+import asyncio
+from threading import Thread
+import redis
 
 import msg
+from intelligence_engine import inteli_e
 
 
 class chk:
@@ -100,18 +125,45 @@ class search:
             resp.status = falcon.HTTP_400
             resp.body = json.dumps(result, ensure_ascii=False)
             return
-
-        dbglog("send request to SearXNG.")
-        dbglog(f"query={query}")
+        
+        try:
+            pageno = params["pageno"]
+        except:
+            dbglog("Use default value (pageno)")
+            pageno = 1
 
         try:
-            upstream_request = requests.get(f"http://searxng:8080/search?q={query}&format=json")
+            category = params["category"]
+        except:
+            dbglog("Use default value (category)")
+            category = "general"
+
+        try:
+            language = params["language"]
+        except:
+            dbglog("Use default value (language)")
+            language = "ja-JP"
+
+        dbglog(f"query={query}")
+        dbglog("Load intelligence-engine")
+
+        try:
+            inteli_e_thread = Thread(target=run_inteli_e, args=(query, inteli_e_result))
+            inteli_e_thread.start()
+        except Exception as e:
+            msg.fatal_error(f"Exception: {e}")
+
+        # request to SearXNG
+        dbglog("send request to SearXNG.")
+
+        try:
+            upstream_request = requests.get(f"http://searxng:8080/search?q={query}&language={language}&format=json&category_{category}=on&pageno={pageno}")
             result = upstream_request.json()
         except Exception as e:
             result = {"error": "UPSTREAM_ENGINE_ERROR"}
             resp.status = falcon.HTTP_500
             resp.body = json.dumps(result, ensure_ascii=False)
-            msg.fetal_error(f"UPSTREAM_ENGINE_ERROR has occurred! \nexception: {str(e)}")
+            msg.fatal_error(f"UPSTREAM_ENGINE_ERROR has occurred! \nexception: {str(e)}")
             return
 
 
@@ -130,7 +182,35 @@ class search:
 
             i -= 1
 
+        dbglog("Wait for inteli_e")
+        try:
+            while inteli_e_thread.is_alive():
+                pass
+            dbglog(f"inteli_e result: {inteli_e_result[0]}")
+        except Exception as e:
+            msg.error(f"Exception: {e}")
+        
+
+        if inteli_e_result != None:
+            dbglog("Overwrite answers[0] by inteli_e_result !")
+            try:
+                result["answers"].insert(0, inteli_e_result[0])
+            except Exception as e:
+                msg.error(f"Exception: {e}")
+        else:
+            dbglog("No info from inteli_e")
+
         resp.body = json.dumps(result, ensure_ascii=False)
+
+        result_hash = hashlib.md5(str(result).encode()).hexdigest()
+        dbglog(f"result_hash: {result_hash}")
+        try:
+            redis.set(f"archive.{result_hash}", str(result))
+            redis.set(f"queue.{result_hash}", "unprocessed")
+        except Exception as e:
+            msg.fatal_error(f"Database error has occurred! \nexception: {str(e)}")
+        else:
+            dbglog("saved to DB")
 
 
 # 構成をロード
@@ -155,7 +235,7 @@ try:
 
 except Exception as e:
     msg.error("faild to load lists")
-    msg.fetal_error(str(e))
+    msg.fatal_error(str(e))
     sys.exit(1)
 
 app = falcon.asgi.App()
@@ -167,6 +247,21 @@ def dbglog(message):
 
 if __name__ != "__main__":
     msg.info("Starting....")
+
+    inteli_e_result = []
+    
+    def run_inteli_e(query, inteli_e_result):
+        inteli_e_result.append(inteli_e.main(query))
+        dbglog(f"@run_inteli_e inteli_e_result={inteli_e_result[0]}")
+        return
+
+    try:
+        redis = redis.Redis(host='db', port=6379, db=0)
+        redis.set("test", "ok")
+    except Exception as e:
+        msg.fatal_error(f"Faild to connect DB! \nexception: {str(e)}")
+    else:
+        msg.info("DB ok!")
 
 
 if __name__ == "__main__":
