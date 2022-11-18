@@ -7,6 +7,19 @@ services:
     ports:
       - "127.0.0.1:8000:8000"
 
+  db:
+    container_name: db
+    image: "redis:alpine"
+    command: redis-server --save "" --appendonly "no"
+    tmpfs:
+      - /var/lib/redis
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+
   redis:
     container_name: redis
     image: "redis:alpine"

@@ -2,3 +2,6 @@ falcon
 uvicorn
 tldextract
 pyyaml
+redis
+pygeonlp
+feedparser
