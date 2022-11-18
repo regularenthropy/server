@@ -148,6 +148,7 @@ class search:
         dbglog("Load intelligence-engine")
 
         try:
+            inteli_e_result = []
             inteli_e_thread = Thread(target=run_inteli_e, args=(query, inteli_e_result))
             inteli_e_thread.start()
         except Exception as e:
