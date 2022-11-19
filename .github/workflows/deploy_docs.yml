@@ -33,3 +33,4 @@ jobs:
           projectName: frea-dev-docs
           directory: ./public
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          branch: devel
