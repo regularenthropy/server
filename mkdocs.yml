@@ -12,9 +12,10 @@ nav:
     - Setup: setup.md
     - Tor: results-over-tor.md
     - Turnstile: turnstile.md
+  - Developers:
+    - API: api.md
   - Architecture:
     - overview: architecture.md
-    - subsystem: subsystems.md
   - Workflow:
     - branchs: branch.md
     - ci/cd: pipeline.md
