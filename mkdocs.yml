@@ -12,8 +12,9 @@ nav:
     - Setup: setup.md
     - Tor: results-over-tor.md
     - Turnstile: turnstile.md
-  - Developers:
-    - API: api.md
+  - API:
+    - overview: api/api.md
+    - general: api/general.md
   - Architecture:
     - overview: architecture.md
   - Workflow:
