@@ -191,8 +191,13 @@ class search:
         except Exception as e:
             msg.error(f"Exception: {e}")
         
+        try:
+            if result["answers"][0] != None:
+                result["answers"][0] = {'type': 'answer', 'answer': result["answers"][0]}
+        except Exception as e:
+            dbglog("No origin answer")
 
-        if inteli_e_result != None:
+        if inteli_e_result[0] != None:
             dbglog("Overwrite answers[0] by inteli_e_result !")
             try:
                 result["answers"].insert(0, inteli_e_result[0])
