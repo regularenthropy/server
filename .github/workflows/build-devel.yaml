@@ -1,4 +1,4 @@
-name: ci-devel
+name: build-devel
 on:
   push:
     branches:
