@@ -95,7 +95,7 @@ def get_weather(query):
     maxtemp_d3 = get_max_temp(2)
     mintemp_d3 = get_min_temp(2)
 
-    response = {'debug': date_hour, 'weather': weather, 'temp_now': temp_now, 'weather_d2': weather_d2, 'weather_d3': weather_d3, 'maxtemp_d2': maxtemp_d2, 'mintemp_d2': mintemp_d2, 'maxtemp_d3': maxtemp_d3, 'mintemp_d3': mintemp_d3, 'd2_disp':  str(date_d2_month) + '/' + str(date_d2_day), 'd3_disp':  str(date_d3_month) + '/' + str(date_d3_day)} 
+    response = {'weather': weather, 'temp_now': temp_now, 'weather_d2': weather_d2, 'weather_d3': weather_d3, 'maxtemp_d2': maxtemp_d2, 'mintemp_d2': mintemp_d2, 'maxtemp_d3': maxtemp_d3, 'mintemp_d3': mintemp_d3, 'd2_disp':  str(date_d2_month) + '/' + str(date_d2_day), 'd3_disp':  str(date_d3_month) + '/' + str(date_d3_day)} 
     return response
 
 
@@ -117,6 +117,9 @@ def get_train_info(query):
 
 def get_tsunami_info():
     api_url = 'https://api.p2pquake.net/v2/jma/tsunami?limit=1&offset=0&order=-1'
+
+    # For debug
+    #api_url = 'https://api.p2pquake.net/v2/jma/tsunami?limit=1&offset=8&order=-1'
 
     try:
         result = requests.get(api_url).json()
@@ -151,7 +154,7 @@ def main(query):
     if tsunami_info["no_tsunami"] != "true":
         message = "警告: 現在、一部の沿岸地域に" + tsunami_info["grade"] + "が発表されています。"
         dbglog("Done!")
-        return {'message': message, 'tsunami': 'true', 'hide_icon': 'true'}
+        return {'type': 'tsunami_warn', 'message': message, 'tsunami': 'true', 'hide_icon': 'true'}
 
     if '遅延' in query:
         dbglog("Check train information....")
@@ -168,7 +171,7 @@ def main(query):
         if result != "NO_DATA":
             message = "/"" + train_name + "/"が遅延しています。"
             dbglog("Done!")
-            return {'answer': message, 'url': result}
+            return {'type': 'train_delay', 'message': message, 'url': result}
 
     if '天気' in query:
         dbglog("Check weather info....")
@@ -183,7 +186,7 @@ def main(query):
 
         message="現在の天気: " + result['weather']
 
-        weather_data = {'answer': message, 
+        weather_data = {'type': 'weather',  'answer': message, 
                                                                                                        'weather': 'MET Norway', 
                                                                                                        'hide_icon': 'true',
                                                                                                        'weather_icon': result['weather'],

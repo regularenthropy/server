@@ -1,0 +1,22 @@
+site_name: Frea Search development documents
+site_url: https://docs.freasearch.org/
+site_dir: public
+repo_name: frea/search
+repo_url: https://git.freasearch.org/frea/search
+theme:
+  name: material
+  logo: assets/frea-white.svg
+nav:
+  - Welcome: index.md
+  - Admin:
+    - Setup: setup.md
+    - Tor: results-over-tor.md
+    - Turnstile: turnstile.md
+  - API:
+    - overview: api/api.md
+    - general: api/general.md
+  - Architecture:
+    - overview: architecture.md
+  - Workflow:
+    - branchs: branch.md
+    - ci/cd: pipeline.md
