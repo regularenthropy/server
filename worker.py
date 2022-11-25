@@ -219,6 +219,16 @@ class search:
             dbglog("saved to DB")
 
 
+class status:
+    async def on_get(self, req, resp):
+        resp.body =  "{\"status\": \"OK\"}"
+
+
+class fckputin:
+    async def on_get(self, req, resp):
+        resp.body =  "{\"message\": \"FCKPUTIN\"}"
+
+
 # 構成をロード
 debug_mode = True
 
@@ -245,7 +255,11 @@ except Exception as e:
     sys.exit(1)
 
 app = falcon.asgi.App()
+app.add_route('/', status())
 app.add_route('/search', search())
+app.add_route('/health', status())
+app.add_route('/wp-admin', fckputin())
+
 
 def dbglog(message):
     if debug_mode:
