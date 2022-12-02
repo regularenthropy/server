@@ -230,7 +230,7 @@ class fckputin:
 
 
 # 構成をロード
-debug_mode = True
+debug_mode = False
 
 try:
     with open(f"blocklists/main.yml", "r", encoding="utf8") as yml:
