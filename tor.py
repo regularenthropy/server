@@ -33,4 +33,5 @@ async def exec(program: str, args: list[str]) -> None:
     else:
         msg.fatal_error(f'{program} {" ".join(args)} exited with {proc.returncode}')
 
-asyncio.run(exec('tor', ['-f', '/etc/tor/torrc']))
+args = sys.argv
+asyncio.run(exec('tor', ['-f', f'/etc/tor/torrc{args[1]}']))

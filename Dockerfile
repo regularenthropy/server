@@ -13,13 +13,18 @@ RUN pip3 install --no-cache -r ./searxng/src/requirements.txt
 
 COPY ./searxng/settings.yml /etc/searxng/
 COPY ./config/nginx /etc/nginx
-COPY ./config/tor/torrc /etc/tor/
+COPY ./config/tor/torrc1 /etc/tor/
+COPY ./config/tor/torrc2 /etc/tor/
 
 RUN groupadd app \
  && useradd -d /app -s /bin/sh -g app app
 
 RUN chown -R app:app /app \
  && su app -c "python3 -m pygeonlp.api setup /usr/pygeonlp_basedata"
+
+RUN mkdir /var/lib/tor1 /var/lib/tor2 \
+ && chown app:app /var/lib/tor1 \
+ && chown app:app /var/lib/tor2
 
 RUN touch /var/run/nginx.pid && \
   chown -R app:app /var/run/nginx.pid && \

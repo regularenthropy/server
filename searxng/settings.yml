@@ -143,6 +143,7 @@ outgoing:
   proxies:
     all://:
       - socks5h://127.0.0.1:9050
+      - socks5h://127.0.0.1:9051
   using_tor_proxy: false
 
 
