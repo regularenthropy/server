@@ -49,6 +49,9 @@ def start_redis():
 def start_job_manager():
     subprocess.call(["python3", "job_manager.py"])
 
+def start_tor():
+    subprocess.call(["python3", "tor.py"])
+
 # Start nginx
 nginx_server_thread = threading.Thread(target=start_nginx)
 nginx_server_thread.start()
@@ -64,6 +67,10 @@ searx_server_thread.start()
 # Start redis
 redis_server_thread = threading.Thread(target=start_redis)
 redis_server_thread.start()
+
+# Start Tor
+tor_server_thread = threading.Thread(target=start_tor)
+tor_server_thread.start()
 
 msg.info("Starting job manager...")
 job_manager_thread = threading.Thread(target=start_job_manager)

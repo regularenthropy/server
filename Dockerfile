@@ -3,7 +3,7 @@ FROM fedora:latest
 WORKDIR /app
 
 RUN dnf update -y
-RUN dnf install -y python3 python3-pip nginx boost mecab-ipadic sqlite redis python3-devel boost-devel mecab-devel sqlite-devel make automake gcc gcc-c++ util-linux
+RUN dnf install -y python3 python3-pip nginx boost mecab-ipadic sqlite redis python3-devel boost-devel mecab-devel sqlite-devel make automake gcc gcc-c++ util-linux tor
 
 COPY ./requirements.txt .
 RUN pip3 install --no-cache -r requirements.txt
@@ -13,6 +13,7 @@ RUN pip3 install --no-cache -r ./searxng/src/requirements.txt
 
 COPY ./searxng/settings.yml /etc/searxng/
 COPY ./config/nginx /etc/nginx
+COPY ./config/tor/torrc /etc/tor/
 
 RUN groupadd app \
  && useradd -d /app -s /bin/sh -g app app
