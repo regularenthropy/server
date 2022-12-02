@@ -286,4 +286,4 @@ if __name__ != "__main__":
 
 if __name__ == "__main__":
     dbglog("Debug mode!!!!")
-    uvicorn.run("worker:app", host="0.0.0.0", port=8000, workers=5, log_level="info")
+    uvicorn.run("worker:app", host="0.0.0.0", port=8889, workers=5, log_level="info")
