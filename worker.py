@@ -32,7 +32,7 @@ from threading import Thread
 import redis
 
 import msg
-from intelligence_engine import inteli_e
+import inteli_e
 
 
 class chk:
@@ -158,7 +158,7 @@ class search:
         dbglog("send request to SearXNG.")
 
         try:
-            upstream_request = requests.get(f"http://searxng:8080/search?q={query}&language={language}&format=json&category_{category}=on&pageno={pageno}")
+            upstream_request = requests.get(f"http://127.0.0.1:8888/search?q={query}&language={language}&format=json&category_{category}=on&pageno={pageno}")
             result = upstream_request.json()
         except Exception as e:
             result = {"error": "UPSTREAM_ENGINE_ERROR"}

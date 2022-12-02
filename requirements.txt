@@ -5,3 +5,4 @@ pyyaml
 redis
 pygeonlp
 feedparser
+pyfiglet
