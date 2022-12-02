@@ -199,6 +199,26 @@ def main(query):
                                                                                                        'd3_disp': result['d3_disp']}
         
         return weather_data
+
+    if 'コロナ' in query:
+        w_message = "新型コロナウイルス感染症に関する正しい情報をお求めの場合は、厚生労働省のwebサイトをご確認ください。"
+        link = "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000164708_00001.html"
+
+    if 'ワクチン' in query:
+        w_message = "新型コロナワクチンに関する信頼できる情報をお求めの場合は、公的機関のページが役に立つでしょう。"
+        link = "https://v-sys.mhlw.go.jp/"
+
+    if 'ウクライナ' in query:
+        w_message = "ユニセフの緊急募金に参加しウクライナを支援できます。"
+        link = "https://www.unicef.or.jp/kinkyu/ukraine/"
+
+    if 'w_message' in locals():
+        if 'link' in locals():
+            warn_msg = {'answer': w_message, 'url': link}
+        else:
+            warn_msg = {'answer': w_message}
+        
+        return warn_msg
     
     dbglog("No info!")
     return None
