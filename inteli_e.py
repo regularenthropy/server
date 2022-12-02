@@ -214,9 +214,9 @@ def main(query):
 
     if 'w_message' in locals():
         if 'link' in locals():
-            warn_msg = {'answer': w_message, 'url': link}
+            warn_msg = {'type': 'answer', 'answer': w_message, 'url': link}
         else:
-            warn_msg = {'answer': w_message}
+            warn_msg = {'type': 'answer', 'answer': w_message}
         
         return warn_msg
     
