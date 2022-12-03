@@ -38,6 +38,10 @@ def start_search_api_server():
     msg.info("Starting search API server workers....")
     subprocess.call(["python3", "worker.py"])
 
+def start_front():
+    msg.info("Starting UI....")
+    subprocess.call(["python3", "start_ui.py"])
+
 def start_searxng():
     msg.info("Starting SearXNG....")
     subprocess.call(["python3", "searx.py"])
@@ -59,6 +63,10 @@ nginx_server_thread.start()
 # Start API server
 search_server_thread = threading.Thread(target=start_search_api_server)
 search_server_thread.start()
+
+# Start UI
+front_server_thread = threading.Thread(target=start_front)
+front_server_thread.start()
 
 # Start searx
 searx_server_thread = threading.Thread(target=start_searxng)

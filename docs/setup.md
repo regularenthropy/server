@@ -95,25 +95,10 @@ services:
 ### step4
 適当なhttpサーバーをシステムにインストールし、`localhost:8888`へリバースプロキシするように設定します。https化するのを忘れないでください。
 
+
 ## APIサーバー
-
 ### step1
-適当なディレクトリへ移動し、以下の3つのファイルを作成します。
-
-#### setting.yml
-長いので[ここから](https://git.freasearch.org/core/api/-/raw/main/searxng/settings.yml?inline=false)ダウンロード
-
-##### アップストリームエンジンとの通信にTorを使用する場合（推奨）
-`outgoing:`セクションを以下のように変更  
-
-```
-outgoing:
-  request_timeout: 3.0
-  proxies:
-    all://:
-      - socks5h://tor:9050
-  using_tor_proxy: true
-```
+適当なディレクトリへ移動し、以下のファイルを作成します。
 
 #### docker-compose.yml
 ```
@@ -136,27 +121,6 @@ services:
       - SETUID
       - DAC_OVERRIDE
 
-  # オプション: Tor利用時のみ
-  tor:
-    image: osminogin/tor-simple
-    container_name: tor
-    restart: always
-    volumes:
-      - ./torrc:/etc/tor/torrc:ro
-
-  searxng:
-    container_name: searxng
-    image: searxng/searxng:latest
-    volumes:
-      - ./settings.yml:/etc/searxng/settings.yml:ro
-    cap_drop:
-      - ALL
-    cap_add:
-      - CHOWN
-      - SETGID
-      - SETUID
-      - DAC_OVERRIDE
-
   frea-api:
     image: "nexryai/frea-api:latest"
     restart: always
@@ -170,26 +134,9 @@ services:
       - DAC_OVERRIDE
 ```
 
-#### torrc（Tor利用時のみ）
-```
-SocksPort 0.0.0.0:9050
-
-# オプション: ブリッジを使用する場合のみ
-UseBridges 1
-Bridge [ブリッジのアドレス]:[ブリッジのポート]
-
-# オプション: 高速化、もしくはプライバシー強化のためノードのリージョンを制限したい場合のみ
-StrictNodes 1
-ExcludeNodes {bd},{be},{bf},{bg},{ba},{bb},{wf},{bl},{bm},{bn},{bo},{bh},{bi},{bj},{bt},{jm},{bv},{bw},{ws},{bq},{br},{bs},{je},{by},{bz},{ru},{rw},{rs},{lt},{re},{lu},{lr},{ro},{ls},{gw},{gu},{gt},{gs},{gr},{gq},{gp},{gy},{gg},{gf},{ge},{gd},{gb},{ga},{gn},{gm},{gl},{kw},{gi},{gh},{om},{jo},{hr},{ht},{hu},{hk},{hn},{hm},{ad},{pr},{ps},{pw},{pt},{kn},{py},{ai},{pa},{pf},{pg},{pe},{pk},{ph},{pn},{pl},{pm},{zm},{eh},{ee},{eg},{za},{ec},{al},{ao},{kz},{et},{zw},{ky},{es},{er},{me},{md},{mg},{mf},{ma},{mc},{uz},{mm},{ml},{mo},{mn},{mh},{mk},{mu},{mt},{mw},{mv},{mq},{mp},{ms},{mr},{au},{ug},{my},{mx},{vu},{fr},{aw},{af},{ax},{fi},{fj},{fk},{fm},{fo},{ni},{nl},{no},{na},{nc},{ne},{nf},{ng},{nz},{np},{nr},{nu},{ck},{ci},{ch},{co},{cn},{cm},{cl},{cc},{ca},{cg},{cf},{cd},{cz},{cy},{cx},{cr},{kp},{cw},{cv},{cu},{sz},{sy},{sx},{kg},{ke},{ss},{sr},{ki},{kh},{sv},{km},{st},{sk},{sj},{si},{sh},{so},{sn},{sm},{sl},{sc},{sb},{sa},{se},{sd},{do},{dm},{dj},{dk},{de},{ye},{at},{dz},{us},{lv},{uy},{yt},{um},{tz},{lc},{la},{tv},{tt},{tr},{lk},{li},{tn},{to},{tl},{tm},{tj},{tk},{th},{tf},{tg},{td},{tc},{ly},{va},{vc},{ae},{ve},{ag},{vg},{iq},{vi},{is},{ir},{am},{it},{vn},{aq},{as},{ar},{im},{il},{io},{in},{lb},{az},{ie},{id},{ua},{qa},{mz}
-ExitNodes {jp},{kr},{tw},{hk},{sg}
-```
-
 ### step2
-`sed -i -e "s/ultrasecretkey/$(openssl rand -hex 16)/g" "settings.yml"`を実行しサーバーのシークレットキーを設定します。  
-
-### step3
 実行します。  
 `docker-compose up`
 
-### step4
+### step3
 適当なhttpサーバーをシステムにインストールし、`localhost:8000`へリバースプロキシするように設定します。https化するのを忘れないでください。
