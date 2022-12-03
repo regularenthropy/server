@@ -10,8 +10,6 @@ nav:
   - Welcome: index.md
   - Admin:
     - Setup: setup.md
-    - Tor: results-over-tor.md
-    - Turnstile: turnstile.md
   - API:
     - overview: api/api.md
     - general: api/general.md
