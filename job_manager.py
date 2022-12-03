@@ -35,4 +35,4 @@ else:
 while True:
     time.sleep(10)
     queue = redis.scan_iter("queue.*")
-    msg.info(f"queue: {str(queue)}")
+    #msg.info(f"queue: {str(queue)}")

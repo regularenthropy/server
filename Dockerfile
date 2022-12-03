@@ -43,4 +43,4 @@ RUN find ./searxng/src/searx/static \( -name '*.html' -o -name '*.css' -o -name 
 RUN cd ./searxng/src && pip install -e .
 
 EXPOSE 8000
-CMD ["su", "app", "-c", "python3 core.py"]
+CMD ["su", "app", "-c", "python3 -u core.py"]

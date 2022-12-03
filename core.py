@@ -32,29 +32,29 @@ print("\n(c) 2022 nexryai\nThis program is distributed in the hope that it will 
 
 def start_nginx():
     msg.info("Starting nginx....")
-    subprocess.call(["python3", "nginx.py"])
+    subprocess.call(["python3", "-u", "nginx.py"])
 
 def start_search_api_server():
     msg.info("Starting search API server workers....")
-    subprocess.call(["python3", "worker.py"])
+    subprocess.call(["python3", "-u", "worker.py"])
 
 def start_front():
     msg.info("Starting UI....")
-    subprocess.call(["python3", "start_ui.py"])
+    subprocess.call(["python3", "-u", "start_ui.py"])
 
 def start_searxng():
     msg.info("Starting SearXNG....")
-    subprocess.call(["python3", "searx.py"])
+    subprocess.call(["python3", "-u", "searx.py"])
 
 def start_redis():
     msg.info("Starting redis....")
-    subprocess.call(["python3", "redis_server.py"])
+    subprocess.call(["python3", "-u", "redis_server.py"])
 
 def start_job_manager():
-    subprocess.call(["python3", "job_manager.py"])
+    subprocess.call(["python3", "-u", "job_manager.py"])
 
 def start_tor(n):
-    subprocess.call(["python3", "tor.py", str(n)])
+    subprocess.call(["python3", "-u", "tor.py", str(n)])
 
 # Start nginx
 nginx_server_thread = threading.Thread(target=start_nginx)
