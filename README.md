@@ -1,3 +1,4 @@
+<div align="center">
 <img src="docs/assets/logo.png" alt="Frea Search" width="60%"><br><br>
 <p><a href="https://git.sda1.net/frea/search-api"><img src="https://img.shields.io/badge/frea%2Fsearch-master-lightgrey?style=for-the-badge&amp;logo=gitlab" alt="repo: frea/search"></a>
 <a href="https://www.gnu.org/licenses/agpl-3.0"><img src="https://img.shields.io/badge/License-AGPL_v3-blue.svg?style=for-the-badge" alt="License: AGPL v3"></a>
