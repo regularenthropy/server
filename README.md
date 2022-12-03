@@ -10,7 +10,7 @@
 <a href="https://palletsprojects.com/p/flask/"><img src="https://img.shields.io/badge/falcon-000000?style=for-the-badge&logo=falcon" alt="falcon"></a>
 <a href="https://palletsprojects.com/p/flask/"><img src="https://img.shields.io/badge/flask-000000?style=for-the-badge&logo=flask" alt="flask"></a>
 
-<br>
+<br><br>
 信頼性の高い検索結果のみを表示するクリーンな検索エンジン<br>
 <br>
 <ul>
