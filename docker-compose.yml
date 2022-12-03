@@ -6,6 +6,7 @@ services:
     restart: always
     ports:
       - "127.0.0.1:8000:8000"
+      - "127.0.0.1:8080:8080"
 
   db:
     container_name: db
@@ -16,32 +17,6 @@ services:
     cap_drop:
       - ALL
     cap_add:
-      - SETGID
-      - SETUID
-      - DAC_OVERRIDE
-
-  redis:
-    container_name: redis
-    image: "redis:alpine"
-    command: redis-server --save "" --appendonly "no"
-    tmpfs:
-      - /var/lib/redis
-    cap_drop:
-      - ALL
-    cap_add:
-      - SETGID
-      - SETUID
-      - DAC_OVERRIDE
-
-  searxng:
-    container_name: searxng
-    image: searxng/searxng:latest
-    volumes:
-      - ./searxng:/etc/searxng:rw
-    cap_drop:
-      - ALL
-    cap_add:
-      - CHOWN
       - SETGID
       - SETUID
       - DAC_OVERRIDE

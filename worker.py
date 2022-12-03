@@ -32,7 +32,7 @@ from threading import Thread
 import redis
 
 import msg
-from intelligence_engine import inteli_e
+import inteli_e
 
 
 class chk:
@@ -158,7 +158,7 @@ class search:
         dbglog("send request to SearXNG.")
 
         try:
-            upstream_request = requests.get(f"http://searxng:8080/search?q={query}&language={language}&format=json&category_{category}=on&pageno={pageno}")
+            upstream_request = requests.get(f"http://127.0.0.1:8888/search?q={query}&language={language}&format=json&category_{category}=on&pageno={pageno}")
             result = upstream_request.json()
         except Exception as e:
             result = {"error": "UPSTREAM_ENGINE_ERROR"}
@@ -230,7 +230,7 @@ class fckputin:
 
 
 # 構成をロード
-debug_mode = True
+debug_mode = False
 
 try:
     with open(f"blocklists/main.yml", "r", encoding="utf8") as yml:
@@ -286,4 +286,4 @@ if __name__ != "__main__":
 
 if __name__ == "__main__":
     dbglog("Debug mode!!!!")
-    uvicorn.run("worker:app", host="0.0.0.0", port=8000, workers=5, log_level="info")
+    uvicorn.run("worker:app", host="0.0.0.0", port=8889, workers=5, log_level="info")

@@ -1,0 +1,29 @@
+{% extends "simple/page_with_header.html" %}
+
+{% block content %}
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback" async defer></script>
+<div class="challenge" style="text-align: center; padding-top: 10%;">
+    <h1>Please wait...</h1>
+    <p>{{ _('Checking the validity of the request.') }}</p>
+</div>
+<div style="text-align: center; padding-top: 2%;">
+    <div id="turnstile"></div>
+</div>
+<script>
+    window.onloadTurnstileCallback = function () {
+        turnstile.render('#turnstile', {
+            sitekey: '{{ turnstile_site_key }}',
+            callback: function(token) {
+                const url = new URL(window.location.href);
+                if(navigator.cookieEnabled){
+                    document.cookie = `am_i_human=${token}; SameSite=strict; Secure`;
+                    window.location.href = url;
+                }else {
+                    url.searchParams.set("am_i_human", token)
+                    window.location.href = url;
+                }
+            },
+        });
+    };
+</script>
+{% endblock %}

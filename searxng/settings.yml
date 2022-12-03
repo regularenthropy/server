@@ -73,7 +73,7 @@ server:
     Referrer-Policy: no-referrer
 
 redis:
-  url: redis://redis:6379/0
+  url: redis://127.0.0.1:6379/0
 
 ui:
   # Custom static path - leave it blank if you didn't change
@@ -140,34 +140,12 @@ outgoing:
   pool_maxsize: 20
   # See https://www.python-httpx.org/http2/
   enable_http2: true
-  # uncomment below section if you want to use a custom server certificate
-  # see https://www.python-httpx.org/advanced/#changing-the-verification-defaults
-  # and https://www.python-httpx.org/compatibility/#ssl-configuration
-  #  verify: ~/.mitmproxy/mitmproxy-ca-cert.cer
-  #
-  # uncomment below section if you want to use a proxyq see: SOCKS proxies
-  #   https://2.python-requests.org/en/latest/user/advanced/#proxies
-  # are also supported: see
-  #   https://2.python-requests.org/en/latest/user/advanced/#socks
-  #
-  #  proxies:
-  #    all://:
-  #      - http://proxy1:8080
-  #      - http://proxy2:8080
-  #
-  #  using_tor_proxy: true
-  #
-  # Extra seconds to add in order to account for the time taken by the proxy
-  #
-  #  extra_proxy_timeout: 10.0
-  #
-  # uncomment below section only if you have more than one network interface
-  # which can be the source of outgoing search requests
-  #
-  #  source_ips:
-  #    - 1.1.1.1
-  #    - 1.1.1.2
-  #    - fe80::/126
+  proxies:
+    all://:
+      - socks5h://127.0.0.1:9050
+      - socks5h://127.0.0.1:9051
+  using_tor_proxy: false
+
 
 # External plugin configuration, for more details see
 #   https://docs.searxng.org/dev/plugins.html
@@ -232,9 +210,6 @@ categories_as_tabs:
   videos:
   news:
   it:
-  map:
-  social media:
-  
 
 engines:
   - name: 9gag
