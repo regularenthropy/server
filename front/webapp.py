@@ -750,12 +750,17 @@ def search():
 
     try:
         search_query, raw_text_query, _, _ = get_search_query_from_webapp(request.preferences, request.form)
-        get_results = requests.get(f"http://127.0.0.1:8000/search?q={request.form['q']}&category={search_category}&pageno={search_query.pageno}&language={search_query.lang}")
+        get_results = requests.get(f"http://127.0.0.1:8889/search?q={request.form['q']}&category={search_category}&pageno={search_query.pageno}&language={search_query.lang}")
+    except Exception as e:  # pylint: disable=broad-except
+        logger.exception(e, exc_info=True)
+        return render('error.html', reason="FAILD_TO_CONNECT_TO_API_SERVER"), 500
+
+    try:
         result_str = str(get_results.text)
         results = json.loads(result_str, object_hook=lambda d: SimpleNamespace(**d))
     except Exception as e:  # pylint: disable=broad-except
         logger.exception(e, exc_info=True)
-        return render('error.html'), 500
+        return render('error.html', reason="INVALID_RESPONSE_FROM_API"), 500
     
     try:
         result_answer = results.answers[0]
@@ -768,7 +773,7 @@ def search():
     except:
         pass
     else:
-        return render('error.html'), 500
+        return render('error.html', reason=result_err_info), 500
 
     return render(
         # fmt: off
