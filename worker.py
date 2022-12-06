@@ -219,11 +219,13 @@ class search:
         try:
             if escape_text:
                 escape_counts = 0
+                
                 for escape_result in result["results"]:
                     result["results"][escape_counts]["title"] = escape(escape_result["title"])
                     if "content" in escape_result:
                         result["results"][escape_counts]["content"] = escape(escape_result["content"])
-                        escape_counts += 1
+                    
+                    escape_counts += 1
 
         except Exception as e:
             msg.fatal_error(f"The escape of the results failed. The request failed for security reasons. \nException: {e}")
