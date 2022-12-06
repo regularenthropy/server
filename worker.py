@@ -30,6 +30,7 @@ import hashlib
 import asyncio
 from threading import Thread
 import redis
+from html import escape
 
 import msg
 import inteli_e
@@ -206,6 +207,28 @@ class search:
         else:
             dbglog("No info from inteli_e")
 
+        # Anti XSS
+        try:
+            if  params["no_escape"] != "false":
+                escape_text = True
+            else:
+                escape_text = False
+        except:
+            escape_text = True
+
+        try:
+            if escape_text:
+                escape_counts = 0
+                for escape_result in result["results"]:
+                    result["results"][escape_counts]["title"] = escape(escape_result["title"])
+                    if "content" in escape_result:
+                        result["results"][escape_counts]["content"] = escape(escape_result["content"])
+                        escape_counts += 1
+
+        except Exception as e:
+            msg.fatal_error(f"The escape of the results failed. The request failed for security reasons. \nException: {e}")
+            result = {"error": "RESULT_ESCAPE_ERROR"}
+        
         resp.body = json.dumps(result, ensure_ascii=False)
 
         result_hash = hashlib.md5(str(result).encode()).hexdigest()
