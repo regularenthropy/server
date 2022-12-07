@@ -692,7 +692,7 @@ def search():
 
     # check if there is query (not None and not an empty string)
     if not request.form.get('q'):
-        return redirect('/', 400)
+        return redirect('/', 307)
 
     # search
     search_query = None
