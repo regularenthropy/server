@@ -35,6 +35,8 @@ try:
     debug_mode = os.environ['FREA_DEBUG_MODE']
 except:
     msg.warn("FREA_DEBUG_MODE is undefined.")
+    os.environ['FREA_DEBUG_MODE'] = "false"
+
 
 def start_nginx():
     msg.info("Starting nginx....")
