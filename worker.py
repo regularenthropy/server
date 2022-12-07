@@ -31,10 +31,13 @@ import asyncio
 from threading import Thread
 import redis
 from html import escape
+import urllib.parse
 
 import msg
 import inteli_e
 
+
+encode_query = urllib.parse.quote
 
 class chk:
     @staticmethod
@@ -64,32 +67,32 @@ class chk:
     def chk_title(title, content, root_domain, domain):
         if chk.is_in_detect_words(title) and chk.is_in_untrusted_domain(root_domain, domain):
             # タイトルに検出ワードが含まれているかつ信頼できないドメインの場合
-            dbglog(f"detected in title ({title}) and untrusted({domain})!!!")
+            msg.dbg(f"detected in title ({title}) and untrusted({domain})!!!")
             return True
 
         if chk.is_in_block_words(title):
             # タイトルにブロックワードが含まれている場合 
-            dbglog(f"Block words in title ({title}) !!!")
+            msg.dbg(f"Block words in title ({title}) !!!")
             return True
 
         if content != "NO_DATA":
             if chk.is_in_detect_words(content) and chk.is_in_untrusted_domain(root_domain, domain):
                 # 説明に検出ワードが含まれているかつ信頼できないドメインの場合
-                dbglog(f"detected in content ({content}) and untrusted({domain})!!!")
+                msg.dbg(f"detected in content ({content}) and untrusted({domain})!!!")
                 return True
         
             if chk.is_in_block_words(content):
                 # 説明にブロックワードが含まれている場合
-                dbglog(f"Block words in content ({content}) !!!")
+                msg.dbg(f"Block words in content ({content}) !!!")
                 return True
 
     @staticmethod
     def chk_domain(root_domain, domain):
         if root_domain in block_domains:
-            dbglog(f"Block domain in root_domain ({root_domain}) !!!")
+            msg.dbg(f"Block domain in root_domain ({root_domain}) !!!")
             return True
         elif domain in block_domains:
-            dbglog(f"Block domain in domain ({domain}) !!!")
+            msg.dbg(f"Block domain in domain ({domain}) !!!")
             return True
         else:
             return False
@@ -113,7 +116,7 @@ class chk:
         elif chk.chk_title(title, content, root_domain, domain):
             return True
         else:
-            dbglog(f"Passed. \ntitle: {title}\ncontent: {content}\nroot_domain: {root_domain}\ndomain: {domain}")
+            msg.dbg(f"Passed. \ntitle: {title}\ncontent: {content}\nroot_domain: {root_domain}\ndomain: {domain}")
             return False
 
 class search:
@@ -130,23 +133,27 @@ class search:
         try:
             pageno = params["pageno"]
         except:
-            dbglog("Use default value (pageno)")
+            msg.dbg("Use default value (pageno)")
             pageno = 1
 
         try:
             category = params["category"]
         except:
-            dbglog("Use default value (category)")
+            msg.dbg("Use default value (category)")
             category = "general"
 
         try:
             language = params["language"]
         except:
-            dbglog("Use default value (language)")
+            msg.dbg("Use default value (language)")
             language = "ja-JP"
 
-        dbglog(f"query={query}")
-        dbglog("Load intelligence-engine")
+        msg.dbg(f"query={query}")
+
+        query_encoded = encode_query(query)
+        msg.dbg(f"query_encoded={query_encoded}")
+
+        msg.dbg("Load intelligence-engine")
 
         try:
             inteli_e_result = []
@@ -156,10 +163,10 @@ class search:
             msg.fatal_error(f"Exception: {e}")
 
         # request to SearXNG
-        dbglog("send request to SearXNG.")
+        msg.dbg("send request to SearXNG.")
 
         try:
-            upstream_request = requests.get(f"http://127.0.0.1:8888/search?q={query}&language={language}&format=json&category_{category}=on&pageno={pageno}")
+            upstream_request = requests.get(f"http://127.0.0.1:8888/search?q={query_encoded}&language={language}&format=json&category_{category}=on&pageno={pageno}")
             result = upstream_request.json()
         except Exception as e:
             result = {"error": "UPSTREAM_ENGINE_ERROR"}
@@ -170,25 +177,25 @@ class search:
 
 
         i = len(result["results"]) - 1
-        dbglog(f"Len of results are {i}")
+        msg.dbg(f"Len of results are {i}")
 
         while i >= 0:
-            dbglog("======================")
-            dbglog(f"Checking result[{i}]")
+            msg.dbg("======================")
+            msg.dbg(f"Checking result[{i}]")
 
             if chk.chk_result(result["results"][i]):
-                dbglog(f"Kill result[{i}]")
+                msg.dbg(f"Kill result[{i}]")
                 del result["results"][i]
             else:
-                dbglog(f"Do not kill result[{i}]")
+                msg.dbg(f"Do not kill result[{i}]")
 
             i -= 1
 
-        dbglog("Wait for inteli_e")
+        msg.dbg("Wait for inteli_e")
         try:
             while inteli_e_thread.is_alive():
                 pass
-            dbglog(f"inteli_e result: {inteli_e_result[0]}")
+            msg.dbg(f"inteli_e result: {inteli_e_result[0]}")
         except Exception as e:
             msg.error(f"Exception: {e}")
         
@@ -196,16 +203,16 @@ class search:
             if result["answers"][0] != None:
                 result["answers"][0] = {'type': 'answer', 'answer': result["answers"][0]}
         except Exception as e:
-            dbglog("No origin answer")
+            msg.dbg("No origin answer")
 
         if inteli_e_result[0] != None:
-            dbglog("Overwrite answers[0] by inteli_e_result !")
+            msg.dbg("Overwrite answers[0] by inteli_e_result !")
             try:
                 result["answers"].insert(0, inteli_e_result[0])
             except Exception as e:
                 msg.error(f"Exception: {e}")
         else:
-            dbglog("No info from inteli_e")
+            msg.dbg("No info from inteli_e")
 
         # Anti XSS
         try:
@@ -234,14 +241,14 @@ class search:
         resp.body = json.dumps(result, ensure_ascii=False)
 
         result_hash = hashlib.md5(str(result).encode()).hexdigest()
-        dbglog(f"result_hash: {result_hash}")
+        msg.dbg(f"result_hash: {result_hash}")
         try:
             redis.set(f"archive.{result_hash}", str(result))
             redis.set(f"queue.{result_hash}", "unprocessed")
         except Exception as e:
             msg.fatal_error(f"Database error has occurred! \nexception: {str(e)}")
         else:
-            dbglog("saved to DB")
+            msg.dbg("saved to DB")
 
 
 class status:
@@ -255,7 +262,7 @@ class fckputin:
 
 
 # 構成をロード
-debug_mode = False
+debug_mode = True
 
 try:
     with open(f"blocklists/main.yml", "r", encoding="utf8") as yml:
@@ -286,10 +293,6 @@ app.add_route('/health', status())
 app.add_route('/wp-admin', fckputin())
 
 
-def dbglog(message):
-    if debug_mode:
-        msg.dbg(message)
-
 if __name__ != "__main__":
     msg.info("Starting....")
 
@@ -297,7 +300,7 @@ if __name__ != "__main__":
     
     def run_inteli_e(query, inteli_e_result):
         inteli_e_result.append(inteli_e.main(query))
-        dbglog(f"@run_inteli_e inteli_e_result={inteli_e_result[0]}")
+        msg.dbg(f"@run_inteli_e inteli_e_result={inteli_e_result[0]}")
         return
 
     try:
@@ -310,5 +313,5 @@ if __name__ != "__main__":
 
 
 if __name__ == "__main__":
-    dbglog("Debug mode!!!!")
+    msg.dbg("Debug mode!!!!")
     uvicorn.run("worker:app", host="0.0.0.0", port=8889, workers=5, log_level="info")

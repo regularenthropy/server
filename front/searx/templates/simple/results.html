@@ -77,10 +77,7 @@
     <div>
 	    <p> {{ icon_big('warning') }} WARNING</p> <br> <p> {{ _('Engines cannot retrieve results') }}</p>
       {%- for engine_name, error_type in unresponsive_engines -%}
-      <p><small>↳{{- engine_name }} (
-        <!--<a href="{{ url_for('stats', engine=engine_name|e) }}" title="{{ _('View error logs and submit a bug report') }}">-->
-          {{- error_type -}}
-        <!--</a>--> ){{- '' -}}
+      <p><small>↳{{- engine_name }} ( {{- error_type -}} ){{- '' -}}
       </small></p>
       {% endfor %}
     </div>

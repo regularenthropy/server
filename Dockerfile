@@ -43,5 +43,5 @@ RUN find ./searxng/src/searx/static \( -name '*.html' -o -name '*.css' -o -name 
 RUN cd ./searxng/src && pip install -e . \
  && rm -rf .coveragerc .dir-locals.el .dockerignore .git .gitattributes .github .gitignore .nvmrc .pylintrc .weblate .yamllint.yml AUTHORS.rst CHANGELOG.rst CONTRIBUTING.md Dockerfile LICENSE Makefile PULL_REQUEST_TEMPLATE.md README.rst SECURITY.md babel.cfg dockerfiles docs examples manage package.json pyrightconfig-ci.json pyrightconfig.json requirements-dev.txt requirements.txt searxng_extra setup.py src tests utils \
 
-EXPOSE 8000
+ENV FREA_DEBUG_MODE=false
 CMD ["su", "app", "-c", "python3 -u core.py"]

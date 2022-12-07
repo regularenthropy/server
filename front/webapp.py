@@ -131,6 +131,7 @@ from searx.network import stream as http_stream, set_context_network_name
 from searx.search.checker import get_result as checker_get_result
 
 logger = logger.getChild('webapp')
+encode_query = urllib.parse.quote
 
 if settings['server']['use_turnstile'] == True:
     try:
@@ -748,9 +749,11 @@ def search():
     except:
         search_category = "general"
 
+    query_encoded = encode_query(request.form['q'])
+
     try:
         search_query, raw_text_query, _, _ = get_search_query_from_webapp(request.preferences, request.form)
-        get_results = requests.get(f"http://127.0.0.1:8889/search?q={request.form['q']}&category={search_category}&pageno={search_query.pageno}&language={search_query.lang}")
+        get_results = requests.get(f"http://127.0.0.1:8889/search?q={query_encoded}&category={search_category}&pageno={search_query.pageno}&language={search_query.lang}")
     except Exception as e:  # pylint: disable=broad-except
         logger.exception(e, exc_info=True)
         return render('error.html', reason="FAILD_TO_CONNECT_TO_API_SERVER"), 500
@@ -780,34 +783,36 @@ def search():
     except:
         pass
     else:
-        return render('error.html', reason=f"API server response: \"{result_err_info}\""), 500
+        return render('error.html', reason=f"UNEXPECTED_ERROR_IN_API_SERVER"), 500
 
-    return render(
-        # fmt: off
-        'results.html',
-        results = results.results,
-        q=request.form['q'],
-        selected_categories = [search_category],
-        pageno = search_query.pageno,
-        time_range = search_query.time_range,
-        number_of_results = None,
-        suggestions = results.suggestions,
-        answer = result_answer,
-        corrections = results.corrections,
-        infoboxes = results.infoboxes,
-        engine_data = None,
-        paging = True,
-        unresponsive_engines = results.unresponsive_engines,
-        current_locale = request.preferences.get_value("locale"),
-        current_language = match_language(
-            search_query.lang,
-            settings['search']['languages'],
-            fallback=request.preferences.get_value("language")
-        ),
-        timeout_limit = request.form.get('timeout_limit', None)
-        # fmt: on
-    )
-
+    try:
+        return render(
+            # fmt: off
+            'results.html',
+            results = results.results,
+            q=request.form['q'],
+            selected_categories = [search_category],
+            pageno = search_query.pageno,
+            time_range = search_query.time_range,
+            number_of_results = None,
+            suggestions = results.suggestions,
+            answer = result_answer,
+            corrections = results.corrections,
+            infoboxes = results.infoboxes,
+            engine_data = None,
+            paging = True,
+            unresponsive_engines = results.unresponsive_engines,
+            current_locale = request.preferences.get_value("locale"),
+            current_language = match_language(
+                search_query.lang,
+                settings['search']['languages'],
+                fallback=request.preferences.get_value("language")
+            ),
+            timeout_limit = request.form.get('timeout_limit', None)
+        )
+    except Exception as e:
+        logger.error(f"Faild to render result page ! \nException: {e}")
+        return render('error.html', reason="FAILD_TO_RENDER_RESULT_PAGE"), 500
 
 def __get_translated_errors(unresponsive_engines: Iterable[UnresponsiveEngine]):
     translated_errors = []

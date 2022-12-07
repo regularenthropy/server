@@ -29,8 +29,9 @@ def info(message):
     sys.stdout.write(f"[{target_file}]\033[32m [INFO]\033[0m " + str(message) + "\n")
 
 def dbg(message):
-    target_file = os.path.splitext(os.path.basename(inspect.stack()[1].filename))[0]
-    sys.stdout.write(f"[{target_file}]\033[90m [DEBUG] @{time.time()}\033[0m " + str(message) + "\n")
+    if os.environ['FREA_DEBUG_MODE'] == "true":
+        target_file = os.path.splitext(os.path.basename(inspect.stack()[1].filename))[0]
+        sys.stdout.write(f"[{target_file}]\033[90m [DEBUG] @{time.time()}\033[0m " + str(message) + "\n")
 
 def error(message):
     target_file = os.path.splitext(os.path.basename(inspect.stack()[1].filename))[0]
