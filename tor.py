@@ -10,8 +10,6 @@ async def exec(program: str, args: list[str]) -> None:
         stderr=asyncio.subprocess.PIPE
     )
 
-    msg.info("Use tor proxy")
-
     while True:
         if proc.stdout.at_eof() and proc.stderr.at_eof():
             break
@@ -34,4 +32,5 @@ async def exec(program: str, args: list[str]) -> None:
         msg.fatal_error(f'{program} {" ".join(args)} exited with {proc.returncode}')
 
 args = sys.argv
-asyncio.run(exec('tor', ['-f', f'/etc/tor/torrc{args[1]}']))
+msg.info(f"Strating tor {args[1]}")
+asyncio.run(exec('tor', ['-f', f'/etc/tor/torrc_{args[1]}']))

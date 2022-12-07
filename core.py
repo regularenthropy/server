@@ -85,11 +85,23 @@ redis_server_thread = threading.Thread(target=start_redis)
 redis_server_thread.start()
 
 # Start Tor
-tor_proxy_1_thread = threading.Thread(target=start_tor, args=(1,))
-tor_proxy_1_thread.start()
 
-tor_proxy_2_thread = threading.Thread(target=start_tor, args=(2,))
-tor_proxy_2_thread.start()
+'''
+p1, p2 はそれぞれプロキシサーバーとして動く
+e1, e2 はそれぞれTorのエントリーノード（ブリッジ）として動く
+'''
+tor_proxy_p1_thread = threading.Thread(target=start_tor, args=("p1",))
+tor_proxy_p1_thread.start()
+
+tor_proxy_p2_thread = threading.Thread(target=start_tor, args=("p2",))
+tor_proxy_p2_thread.start()
+
+#tor_proxy_e1_thread = threading.Thread(target=start_tor, args=("e1",))
+#tor_proxy_e1_thread.start()
+
+#tor_proxy_e2_thread = threading.Thread(target=start_tor, args=("e2",))
+#tor_proxy_e2_thread.start()
+
 
 msg.info("Starting job manager...")
 job_manager_thread = threading.Thread(target=start_job_manager)
