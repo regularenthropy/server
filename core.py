@@ -19,6 +19,7 @@ along with Frea Search. If not, see < http://www.gnu.org/licenses/ >.
 '''
 
 import msg
+import os
 from pyfiglet import Figlet
 import subprocess
 import threading
@@ -29,6 +30,13 @@ welcome_aa = aa.renderText("Frea Search")
 print("Frea Search core API Server ver.3.10\n")
 print(welcome_aa)
 print("\n(c) 2022 nexryai\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details.\n\n")
+
+try:
+    debug_mode = os.environ['FREA_DEBUG_MODE']
+except:
+    msg.warn("FREA_DEBUG_MODE is undefined.")
+    os.environ['FREA_DEBUG_MODE'] = "false"
+
 
 def start_nginx():
     msg.info("Starting nginx....")
@@ -77,11 +85,23 @@ redis_server_thread = threading.Thread(target=start_redis)
 redis_server_thread.start()
 
 # Start Tor
-tor_proxy_1_thread = threading.Thread(target=start_tor, args=(1,))
-tor_proxy_1_thread.start()
 
-tor_proxy_2_thread = threading.Thread(target=start_tor, args=(2,))
-tor_proxy_2_thread.start()
+'''
+p1, p2 はそれぞれプロキシサーバーとして動く
+e1, e2 はそれぞれTorのエントリーノード（ブリッジ）として動く
+'''
+tor_proxy_p1_thread = threading.Thread(target=start_tor, args=("p1",))
+tor_proxy_p1_thread.start()
+
+tor_proxy_p2_thread = threading.Thread(target=start_tor, args=("p2",))
+tor_proxy_p2_thread.start()
+
+#tor_proxy_e1_thread = threading.Thread(target=start_tor, args=("e1",))
+#tor_proxy_e1_thread.start()
+
+#tor_proxy_e2_thread = threading.Thread(target=start_tor, args=("e2",))
+#tor_proxy_e2_thread.start()
+
 
 msg.info("Starting job manager...")
 job_manager_thread = threading.Thread(target=start_job_manager)

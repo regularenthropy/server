@@ -13,8 +13,10 @@ RUN pip3 install --no-cache -r ./searxng/src/requirements.txt
 
 COPY ./searxng/settings.yml /etc/searxng/
 COPY ./config/nginx /etc/nginx
-COPY ./config/tor/torrc1 /etc/tor/
-COPY ./config/tor/torrc2 /etc/tor/
+COPY ./config/tor/torrc_p1 /etc/tor/
+COPY ./config/tor/torrc_p2 /etc/tor/
+COPY ./config/tor/torrc_e1 /etc/tor/
+COPY ./config/tor/torrc_e2 /etc/tor/
 
 RUN groupadd app \
  && useradd -d /app -s /bin/sh -g app app
@@ -22,9 +24,11 @@ RUN groupadd app \
 RUN chown -R app:app /app \
  && su app -c "python3 -m pygeonlp.api setup /usr/pygeonlp_basedata"
 
-RUN mkdir /var/lib/tor1 /var/lib/tor2 \
- && chown app:app /var/lib/tor1 \
- && chown app:app /var/lib/tor2
+RUN mkdir /var/lib/tor_p1 /var/lib/tor_p2 /var/lib/tor_e1 /var/lib/tor_e2 \
+ && chown app:app /var/lib/tor_p1 \
+ && chown app:app /var/lib/tor_p2 \
+ && chown app:app /var/lib/tor_e1 \
+ && chown app:app /var/lib/tor_e2
 
 RUN touch /var/run/nginx.pid && \
   chown -R app:app /var/run/nginx.pid && \
@@ -43,5 +47,5 @@ RUN find ./searxng/src/searx/static \( -name '*.html' -o -name '*.css' -o -name 
 RUN cd ./searxng/src && pip install -e . \
  && rm -rf .coveragerc .dir-locals.el .dockerignore .git .gitattributes .github .gitignore .nvmrc .pylintrc .weblate .yamllint.yml AUTHORS.rst CHANGELOG.rst CONTRIBUTING.md Dockerfile LICENSE Makefile PULL_REQUEST_TEMPLATE.md README.rst SECURITY.md babel.cfg dockerfiles docs examples manage package.json pyrightconfig-ci.json pyrightconfig.json requirements-dev.txt requirements.txt searxng_extra setup.py src tests utils \
 
-EXPOSE 8000
+ENV FREA_DEBUG_MODE=false
 CMD ["su", "app", "-c", "python3 -u core.py"]

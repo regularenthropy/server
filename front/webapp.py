@@ -131,6 +131,7 @@ from searx.network import stream as http_stream, set_context_network_name
 from searx.search.checker import get_result as checker_get_result
 
 logger = logger.getChild('webapp')
+encode_query = urllib.parse.quote
 
 if settings['server']['use_turnstile'] == True:
     try:
@@ -616,35 +617,6 @@ def post_request(response: flask.Response):
     return response
 
 
-def index_error(output_format: str, error_message: str):
-    if output_format == 'json':
-        return Response(json.dumps({'error': error_message}), mimetype='application/json')
-    if output_format == 'csv':
-        response = Response('', mimetype='application/csv')
-        cont_disp = 'attachment;Filename=searx.csv'
-        response.headers.add('Content-Disposition', cont_disp)
-        return response
-
-    if output_format == 'rss':
-        response_rss = render(
-            'opensearch_response_rss.xml',
-            results=[],
-            q=request.form['q'] if 'q' in request.form else '',
-            number_of_results=0,
-            error_message=error_message,
-        )
-        return Response(response_rss, mimetype='text/xml')
-
-    # html
-    request.errors.append(gettext('search error'))
-    return render(
-        # fmt: off
-        'index.html',
-        selected_categories=get_selected_categories(request.preferences, request.form),
-        # fmt: on
-    )
-
-
 @app.route('/', methods=['GET', 'POST'])
 def index():
     """Render index page."""
@@ -720,14 +692,7 @@ def search():
 
     # check if there is query (not None and not an empty string)
     if not request.form.get('q'):
-        if output_format == 'html':
-            return render(
-                # fmt: off
-                'index.html',
-                selected_categories=get_selected_categories(request.preferences, request.form),
-                # fmt: on
-            )
-        return index_error(output_format, 'No query'), 400
+        return redirect('/', 307)
 
     # search
     search_query = None
@@ -748,14 +713,21 @@ def search():
     except:
         search_category = "general"
 
+    query_encoded = encode_query(request.form['q'])
+
     try:
         search_query, raw_text_query, _, _ = get_search_query_from_webapp(request.preferences, request.form)
-        get_results = requests.get(f"http://127.0.0.1:8000/search?q={request.form['q']}&category={search_category}&pageno={search_query.pageno}&language={search_query.lang}")
+        get_results = requests.get(f"http://127.0.0.1:8889/search?q={query_encoded}&category={search_category}&pageno={search_query.pageno}&language={search_query.lang}")
+    except Exception as e:  # pylint: disable=broad-except
+        logger.exception(e, exc_info=True)
+        return render('error.html', reason="FAILD_TO_CONNECT_TO_API_SERVER"), 500
+
+    try:
         result_str = str(get_results.text)
         results = json.loads(result_str, object_hook=lambda d: SimpleNamespace(**d))
     except Exception as e:  # pylint: disable=broad-except
         logger.exception(e, exc_info=True)
-        return render('error.html'), 500
+        return render('error.html', reason="INVALID_RESPONSE_FROM_API"), 500
     
     try:
         result_answer = results.answers[0]
@@ -768,34 +740,43 @@ def search():
     except:
         pass
     else:
-        return render('error.html'), 500
+        return render('error.html', reason=result_err_info), 500
+    
+    try:
+        result_err_info = results.title
+    except:
+        pass
+    else:
+        return render('error.html', reason=f"UNEXPECTED_ERROR_IN_API_SERVER"), 500
 
-    return render(
-        # fmt: off
-        'results.html',
-        results = results.results,
-        q=request.form['q'],
-        selected_categories = [search_category],
-        pageno = search_query.pageno,
-        time_range = search_query.time_range,
-        number_of_results = None,
-        suggestions = results.suggestions,
-        answer = result_answer,
-        corrections = results.corrections,
-        infoboxes = results.infoboxes,
-        engine_data = None,
-        paging = True,
-        unresponsive_engines = results.unresponsive_engines,
-        current_locale = request.preferences.get_value("locale"),
-        current_language = match_language(
-            search_query.lang,
-            settings['search']['languages'],
-            fallback=request.preferences.get_value("language")
-        ),
-        timeout_limit = request.form.get('timeout_limit', None)
-        # fmt: on
-    )
-
+    try:
+        return render(
+            # fmt: off
+            'results.html',
+            results = results.results,
+            q=request.form['q'],
+            selected_categories = [search_category],
+            pageno = search_query.pageno,
+            time_range = search_query.time_range,
+            number_of_results = None,
+            suggestions = results.suggestions,
+            answer = result_answer,
+            corrections = results.corrections,
+            infoboxes = results.infoboxes,
+            engine_data = None,
+            paging = True,
+            unresponsive_engines = results.unresponsive_engines,
+            current_locale = request.preferences.get_value("locale"),
+            current_language = match_language(
+                search_query.lang,
+                settings['search']['languages'],
+                fallback=request.preferences.get_value("language")
+            ),
+            timeout_limit = request.form.get('timeout_limit', None)
+        )
+    except Exception as e:
+        logger.error(f"Faild to render result page ! \nException: {e}")
+        return render('error.html', reason="FAILD_TO_RENDER_RESULT_PAGE"), 500
 
 def __get_translated_errors(unresponsive_engines: Iterable[UnresponsiveEngine]):
     translated_errors = []
@@ -1153,70 +1134,6 @@ def engine_descriptions():
         if descr is not None:
             result[engine_name] = [descr, "SearXNG config"]
 
-    return jsonify(result)
-
-
-@app.route('/stats', methods=['GET'])
-def stats():
-    """Render engine statistics page."""
-    sort_order = request.args.get('sort', default='name', type=str)
-    selected_engine_name = request.args.get('engine', default=None, type=str)
-
-    filtered_engines = dict(filter(lambda kv: request.preferences.validate_token(kv[1]), engines.items()))
-    if selected_engine_name:
-        if selected_engine_name not in filtered_engines:
-            selected_engine_name = None
-        else:
-            filtered_engines = [selected_engine_name]
-
-    checker_results = checker_get_result()
-    checker_results = (
-        checker_results['engines'] if checker_results['status'] == 'ok' and 'engines' in checker_results else {}
-    )
-
-    engine_stats = get_engines_stats(filtered_engines)
-    engine_reliabilities = get_reliabilities(filtered_engines, checker_results)
-
-    if sort_order not in STATS_SORT_PARAMETERS:
-        sort_order = 'name'
-
-    reverse, key_name, default_value = STATS_SORT_PARAMETERS[sort_order]
-
-    def get_key(engine_stat):
-        reliability = engine_reliabilities.get(engine_stat['name'], {}).get('reliablity', 0)
-        reliability_order = 0 if reliability else 1
-        if key_name == 'reliability':
-            key = reliability
-            reliability_order = 0
-        else:
-            key = engine_stat.get(key_name) or default_value
-            if reverse:
-                reliability_order = 1 - reliability_order
-        return (reliability_order, key, engine_stat['name'])
-
-    engine_stats['time'] = sorted(engine_stats['time'], reverse=reverse, key=get_key)
-    return render(
-        # fmt: off
-        'stats.html',
-        sort_order = sort_order,
-        engine_stats = engine_stats,
-        engine_reliabilities = engine_reliabilities,
-        selected_engine_name = selected_engine_name,
-        searx_git_branch = GIT_BRANCH,
-        # fmt: on
-    )
-
-
-@app.route('/stats/errors', methods=['GET'])
-def stats_errors():
-    filtered_engines = dict(filter(lambda kv: request.preferences.validate_token(kv[1]), engines.items()))
-    result = get_engine_errors(filtered_engines)
-    return jsonify(result)
-
-
-@app.route('/stats/checker', methods=['GET'])
-def stats_checker():
-    result = checker_get_result()
     return jsonify(result)
 
 
