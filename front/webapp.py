@@ -617,35 +617,6 @@ def post_request(response: flask.Response):
     return response
 
 
-def index_error(output_format: str, error_message: str):
-    if output_format == 'json':
-        return Response(json.dumps({'error': error_message}), mimetype='application/json')
-    if output_format == 'csv':
-        response = Response('', mimetype='application/csv')
-        cont_disp = 'attachment;Filename=searx.csv'
-        response.headers.add('Content-Disposition', cont_disp)
-        return response
-
-    if output_format == 'rss':
-        response_rss = render(
-            'opensearch_response_rss.xml',
-            results=[],
-            q=request.form['q'] if 'q' in request.form else '',
-            number_of_results=0,
-            error_message=error_message,
-        )
-        return Response(response_rss, mimetype='text/xml')
-
-    # html
-    request.errors.append(gettext('search error'))
-    return render(
-        # fmt: off
-        'index.html',
-        selected_categories=get_selected_categories(request.preferences, request.form),
-        # fmt: on
-    )
-
-
 @app.route('/', methods=['GET', 'POST'])
 def index():
     """Render index page."""
@@ -721,14 +692,7 @@ def search():
 
     # check if there is query (not None and not an empty string)
     if not request.form.get('q'):
-        if output_format == 'html':
-            return render(
-                # fmt: off
-                'index.html',
-                selected_categories=get_selected_categories(request.preferences, request.form),
-                # fmt: on
-            )
-        return index_error(output_format, 'No query'), 400
+        return redirect('/', 308)
 
     # search
     search_query = None
