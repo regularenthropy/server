@@ -774,6 +774,13 @@ def search():
         pass
     else:
         return render('error.html', reason=result_err_info), 500
+    
+    try:
+        result_err_info = results.title
+    except:
+        pass
+    else:
+        return render('error.html', reason=f"API server response: \"{result_err_info}\""), 500
 
     return render(
         # fmt: off
@@ -1158,70 +1165,6 @@ def engine_descriptions():
         if descr is not None:
             result[engine_name] = [descr, "SearXNG config"]
 
-    return jsonify(result)
-
-
-@app.route('/stats', methods=['GET'])
-def stats():
-    """Render engine statistics page."""
-    sort_order = request.args.get('sort', default='name', type=str)
-    selected_engine_name = request.args.get('engine', default=None, type=str)
-
-    filtered_engines = dict(filter(lambda kv: request.preferences.validate_token(kv[1]), engines.items()))
-    if selected_engine_name:
-        if selected_engine_name not in filtered_engines:
-            selected_engine_name = None
-        else:
-            filtered_engines = [selected_engine_name]
-
-    checker_results = checker_get_result()
-    checker_results = (
-        checker_results['engines'] if checker_results['status'] == 'ok' and 'engines' in checker_results else {}
-    )
-
-    engine_stats = get_engines_stats(filtered_engines)
-    engine_reliabilities = get_reliabilities(filtered_engines, checker_results)
-
-    if sort_order not in STATS_SORT_PARAMETERS:
-        sort_order = 'name'
-
-    reverse, key_name, default_value = STATS_SORT_PARAMETERS[sort_order]
-
-    def get_key(engine_stat):
-        reliability = engine_reliabilities.get(engine_stat['name'], {}).get('reliablity', 0)
-        reliability_order = 0 if reliability else 1
-        if key_name == 'reliability':
-            key = reliability
-            reliability_order = 0
-        else:
-            key = engine_stat.get(key_name) or default_value
-            if reverse:
-                reliability_order = 1 - reliability_order
-        return (reliability_order, key, engine_stat['name'])
-
-    engine_stats['time'] = sorted(engine_stats['time'], reverse=reverse, key=get_key)
-    return render(
-        # fmt: off
-        'stats.html',
-        sort_order = sort_order,
-        engine_stats = engine_stats,
-        engine_reliabilities = engine_reliabilities,
-        selected_engine_name = selected_engine_name,
-        searx_git_branch = GIT_BRANCH,
-        # fmt: on
-    )
-
-
-@app.route('/stats/errors', methods=['GET'])
-def stats_errors():
-    filtered_engines = dict(filter(lambda kv: request.preferences.validate_token(kv[1]), engines.items()))
-    result = get_engine_errors(filtered_engines)
-    return jsonify(result)
-
-
-@app.route('/stats/checker', methods=['GET'])
-def stats_checker():
-    result = checker_get_result()
     return jsonify(result)
 
 

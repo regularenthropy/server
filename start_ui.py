@@ -19,6 +19,7 @@ async def exec(program: str, args: list[str]) -> None:
         stderr = (await proc.stderr.readline()).decode()
         if stderr:
             log_error = log_error + "\n" + stderr
+            #msg.error(stderr)
 
         await asyncio.sleep(0.01)
 
