@@ -19,6 +19,7 @@ along with Frea Search. If not, see < http://www.gnu.org/licenses/ >.
 '''
 
 import msg
+import os
 from pyfiglet import Figlet
 import subprocess
 import threading
@@ -29,6 +30,11 @@ welcome_aa = aa.renderText("Frea Search")
 print("Frea Search core API Server ver.3.10\n")
 print(welcome_aa)
 print("\n(c) 2022 nexryai\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details.\n\n")
+
+try:
+    debug_mode = os.environ['FREA_DEBUG_MODE']
+except:
+    msg.warn("FREA_DEBUG_MODE is undefined.")
 
 def start_nginx():
     msg.info("Starting nginx....")
