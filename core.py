@@ -19,10 +19,12 @@ along with Frea Search. If not, see < http://www.gnu.org/licenses/ >.
 '''
 
 from modules import msg
+
 import os
 from pyfiglet import Figlet
 import subprocess
 import threading
+import yaml
 
 aa = Figlet(font="slant")
 welcome_aa = aa.renderText("Frea Search")
@@ -46,6 +48,7 @@ except KeyError:
 else:
     msg.info("Use Active mode")
     os.environ['FREA_ACTIVE_MODE'] = "true"
+
 
 def start_nginx():
     msg.info("Starting nginx....")
