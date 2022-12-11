@@ -62,5 +62,7 @@ except Exception as e:
 
 while True:
     time.sleep(10)
+    msg.dbg("Check job queue...")
+    job_queue.delete(hash="TEST")
     #queue = redis.scan_iter("queue.*")
     #msg.info(f"queue: {str(queue)}")

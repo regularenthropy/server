@@ -276,6 +276,7 @@ class search:
 
         # Archive result to DB
         if os.environ['FREA_ACTIVE_MODE'] == "true" and not cache_used :
+            del result["query"]
             result_hash = hashlib.md5(str(result).encode()).hexdigest()
             msg.dbg(f"result_hash: {result_hash}")
             try:
@@ -285,7 +286,7 @@ class search:
                 db.rollback()
                 msg.fatal_error(f"Database error has occurred! \nexception: {str(e)}")
             else:
-                msg.info("saved to DB")
+                msg.dbg("saved to DB")
 
 
 class status:
