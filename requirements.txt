@@ -1,5 +1,6 @@
 falcon
 uvicorn
+requests
 tldextract
 pyyaml
 redis
@@ -8,6 +9,13 @@ feedparser
 pyfiglet
 dataset
 psycopg2
+
+numpy
+demoji==1.1.0
+mecab-python==1.0.0
+scikit-learn==1.1.3
+unidic-lite
+pandas
 
 certifi
 babel

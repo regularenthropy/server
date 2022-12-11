@@ -19,11 +19,15 @@ along with Frea Search. If not, see < http://www.gnu.org/licenses/ >.
 '''
 
 import msg
+import analyze
 
 import time
 import os
 import sys
+import ast
 import dataset
+
+analyzer_version = 102
 
 # Load DB config from env
 msg.info("Loading DB config...")
@@ -46,6 +50,7 @@ msg.info("Connecting to DB...")
 try:
     db = dataset.connect(db_url)
     job_queue = db["queue"]
+    reports = db["reports"]
 except Exception as e:
     msg.fatal_error(f"Faild to connect DB! \nexception: {str(e)}")
     sys.exit(1)
@@ -64,5 +69,46 @@ while True:
     time.sleep(10)
     msg.dbg("Check job queue...")
     job_queue.delete(hash="TEST")
-    #queue = redis.scan_iter("queue.*")
-    #msg.info(f"queue: {str(queue)}")
+
+    for analyze_result in db['queue']:
+        result_dict = ast.literal_eval(analyze_result["result"])
+
+        if analyze_result["analyzed"] < analyzer_version :
+            for chk_result in result_dict["results"]:
+
+                _chk_title = chk_result['title']
+                _chk_url = chk_result['url']
+                try:
+                    _chk_content = chk_result['content']
+                except KeyError:
+                    _chk_content = None
+
+                if analyze.chk_text(_chk_title) == 1:
+                    msg.info(f"Suspicious site detected! url: {_chk_url}  title: {_chk_title}")
+                    try:
+                        reports.insert(dict(url=_chk_url, text=_chk_title, reason="title", analyzer_version=analyzer_version))
+                        db.commit()
+                    except Exception as e:
+                        msg.fatal_error(f"Faild to save report to DB. \nException{e}")
+                        db.rollback()
+
+                if _chk_content != None:
+                    if analyze.chk_text(_chk_content) == 1:
+                        msg.info(f"Suspicious site detected! url: {_chk_url}  content:{_chk_content}")
+                        try:
+                            reports.insert(dict(url=_chk_url, text=_chk_content, reason="content", analyzer_version=analyzer_version))
+                            db.commit()
+                        except Exception as e:
+                            msg.fatal_error(f"Faild to save report to DB. \nException{e}")
+                            db.rollback()
+
+                time.sleep(0.1)
+
+        analyze_result["analyzed"] = analyzer_version
+
+        try:
+            job_queue.update(analyze_result, ["hash"])
+            db.commit()
+        except:
+            db.rollback()
+            sys.exit(1)
