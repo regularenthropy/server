@@ -245,8 +245,7 @@ class search:
         result_hash = hashlib.md5(str(result).encode()).hexdigest()
         msg.dbg(f"result_hash: {result_hash}")
         try:
-            redis.set(f"archive.{result_hash}", str(result))
-            redis.set(f"queue.{result_hash}", "unprocessed")
+            job_queue.insert(dict(hash=result_hash, result=str(result), archived=False, analyzed=0))
         except Exception as e:
             msg.fatal_error(f"Database error has occurred! \nexception: {str(e)}")
         else:
