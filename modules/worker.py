@@ -26,14 +26,17 @@ import os
 import sys
 import requests
 import json
+import ast
 import yaml
 import tldextract
 import hashlib
 import asyncio
 from threading import Thread
 import dataset
+import redis
 from html import escape
 import urllib.parse
+import time
 
 import msg
 import inteli_e
@@ -164,18 +167,32 @@ class search:
         except Exception as e:
             msg.fatal_error(f"Exception: {e}")
 
-        # request to SearXNG
-        msg.dbg("send request to SearXNG.")
-
-        try:
-            upstream_request = requests.get(f"http://127.0.0.1:8888/search?q={query_encoded}&language={language}&format=json&category_{category}=on&pageno={pageno}")
-            result = upstream_request.json()
-        except Exception as e:
-            result = {"error": "UPSTREAM_ENGINE_ERROR"}
-            resp.status = falcon.HTTP_500
-            resp.body = json.dumps(result, ensure_ascii=False)
-            msg.fatal_error(f"UPSTREAM_ENGINE_ERROR has occurred! \nexception: {str(e)}")
-            return
+        # Check cache
+        if redis.exists(f"cache.{query_encoded}"):
+            msg.info("Use cache !")
+            cache_used = True
+            try:
+                cache_str = redis.get(f"cache.{query_encoded}").decode("UTF-8")
+                result = ast.literal_eval(cache_str)
+            except Exception as e:
+                result = {"error": "CACHE_ERROR"}
+                resp.status = falcon.HTTP_500
+                resp.body = json.dumps(result, ensure_ascii=False)
+                msg.fatal_error(f"CACHE_ERROR has occurred! \nexception: {str(e)}")
+                return
+        else:
+            # request to SearXNG
+            msg.dbg("send request to SearXNG.")
+            cache_used = False
+            try:
+                upstream_request = requests.get(f"http://127.0.0.1:8888/search?q={query_encoded}&language={language}&format=json&category_{category}=on&pageno={pageno}")
+                result = upstream_request.json()
+            except Exception as e:
+                result = {"error": "UPSTREAM_ENGINE_ERROR"}
+                resp.status = falcon.HTTP_500
+                resp.body = json.dumps(result, ensure_ascii=False)
+                msg.fatal_error(f"UPSTREAM_ENGINE_ERROR has occurred! \nexception: {str(e)}")
+                return
 
 
         i = len(result["results"]) - 1
@@ -240,14 +257,25 @@ class search:
             msg.fatal_error(f"The escape of the results failed. The request failed for security reasons. \nException: {e}")
             result = {"error": "RESULT_ESCAPE_ERROR"}
         
-        # Set number_of_results
+        # Set number_of_results and time_stamp
         result["number_of_results"] = len(result["results"])
 
         # make response
         resp.body = json.dumps(result, ensure_ascii=False)
 
+        # Make cache
+        if len(result["unresponsive_engines"]) < 2 and not cache_used:
+            msg.info("Make cache !")
+            try:
+                redis.set(f"cache.{query_encoded}", str(result))
+                redis.expire(f"cache.{query_encoded}", 21600)
+            except Exception as e:
+                msg.fatal_error(f"Cache generation failed! \nexception: {str(e)}")
+            else:
+                msg.dbg("cache saved")
+
         # Archive result to DB
-        if os.environ['FREA_ACTIVE_MODE'] == "true":
+        if os.environ['FREA_ACTIVE_MODE'] == "true" and not cache_used :
             result_hash = hashlib.md5(str(result).encode()).hexdigest()
             msg.dbg(f"result_hash: {result_hash}")
             try:
@@ -257,7 +285,7 @@ class search:
                 db.rollback()
                 msg.fatal_error(f"Database error has occurred! \nexception: {str(e)}")
             else:
-                msg.dbg("saved to DB")
+                msg.info("saved to DB")
 
 
 class status:
@@ -312,10 +340,18 @@ if __name__ != "__main__":
         msg.dbg(f"@run_inteli_e inteli_e_result={inteli_e_result[0]}")
         return
 
+    # Config redis
+    try:
+        redis = redis.Redis(host='127.0.0.1', port=6379, db=1)
+    except Exception as e:
+        msg.fatal_error(f"Faild to connect DB! \nexception: {str(e)}")
+    else:
+        msg.info("Redis ok!")
+
+
     # Load DB config from env
     if os.environ['FREA_ACTIVE_MODE'] == "true":
         msg.info("Loading DB config...")
-
         try:
             db_host = os.environ['POSTGRES_HOST']
             db_name = os.environ['POSTGRES_DB']
@@ -340,4 +376,4 @@ if __name__ != "__main__":
 
 if __name__ == "__main__":
     msg.dbg("Debug mode!!!!")
-    uvicorn.run("worker:app", host="0.0.0.0", port=8889, workers=5, log_level="error")
+    uvicorn.run("worker:app", host="0.0.0.0", port=8889, workers=5, log_level="info")
