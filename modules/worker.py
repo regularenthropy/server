@@ -22,6 +22,8 @@ import falcon
 import falcon.asgi
 import uvicorn
 
+import os
+import sys
 import requests
 import json
 import yaml
@@ -29,7 +31,7 @@ import tldextract
 import hashlib
 import asyncio
 from threading import Thread
-import redis
+import dataset
 from html import escape
 import urllib.parse
 
@@ -303,13 +305,29 @@ if __name__ != "__main__":
         msg.dbg(f"@run_inteli_e inteli_e_result={inteli_e_result[0]}")
         return
 
+    # Load DB config from env
+    msg.info("Loading DB config...")
+
     try:
-        redis = redis.Redis(host='db', port=6379, db=0)
-        redis.set("test", "ok")
+        db_host = os.environ['POSTGRES_HOST']
+        db_name = os.environ['POSTGRES_DB']
+        db_user = os.environ['POSTGRES_USER']
+        db_passwd = os.environ['POSTGRES_PASSWD']
+    except KeyError as e:
+        msg.fatal_error(f"Faild to load DB config! \nundefined environment variable: {str(e)}")
+        sys.exit(1)
+
+    # Connect to DB
+    msg.info("Connecting to DB...")
+
+    try:
+        db = dataset.connect(f"postgresql://{db_user}:{db_passwd}@{db_host}/{db_name}")
+        job_queue = db["queue"]
     except Exception as e:
         msg.fatal_error(f"Faild to connect DB! \nexception: {str(e)}")
+        sys.exit(1)
     else:
-        msg.info("DB ok!")
+        msg.info("DB connection is OK !")
 
 
 if __name__ == "__main__":

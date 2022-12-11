@@ -19,20 +19,45 @@ along with Frea Search. If not, see < http://www.gnu.org/licenses/ >.
 '''
 
 import msg
-import redis
-import time
 
+import time
+import os
+import sys
+import dataset
+
+# Load DB config from env
+msg.info("Loading DB config...")
+
+try:
+    db_host = os.environ['POSTGRES_HOST']
+    db_name = os.environ['POSTGRES_DB']
+    db_user = os.environ['POSTGRES_USER']
+    db_passwd = os.environ['POSTGRES_PASSWD']
+except KeyError as e:
+    msg.fatal_error(f"Faild to load DB config! \nundefined environment variable: {str(e)}")
+    sys.exit(1)
+
+# Connect to DB
 msg.info("Connecting to DB...")
 
 try:
-    redis = redis.Redis(host='db', port=6379, db=0)
-    redis.set("test", "ok")
+    db = dataset.connect(f"postgresql://{db_user}:{db_passwd}@{db_host}/{db_name}")
+    job_queue = db["queue"]
 except Exception as e:
     msg.fatal_error(f"Faild to connect DB! \nexception: {str(e)}")
+    sys.exit(1)
 else:
-    msg.info("DB ok!")
+    msg.info("DB connection is OK !")
+
+try:
+    job_queue.insert(dict(hash="TEST", result="{\"status\": \"OK\"}", archived=True, analyzed=1))
+    db.commit()
+except Exception as e:
+    msg.fatal_error(f"DB error! \nexception: {str(e)}")
+    db.rollback()
+    sys.exit(1)
 
 while True:
     time.sleep(10)
-    queue = redis.scan_iter("queue.*")
+    #queue = redis.scan_iter("queue.*")
     #msg.info(f"queue: {str(queue)}")

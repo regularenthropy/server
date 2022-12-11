@@ -9,16 +9,17 @@ services:
       - "127.0.0.1:8080:8080"
     environment:
       - FREA_DEBUG_MODE=false
+      - POSTGRES_HOST=db
+      - POSTGRES_DB=frea
+      - POSTGRES_USER=frea
+      - POSTGRES_PASSWD=meaning_of_life
 
   db:
-    container_name: db
-    image: "redis:alpine"
-    command: redis-server --save "" --appendonly "no"
-    tmpfs:
-      - /var/lib/redis
-    cap_drop:
-      - ALL
-    cap_add:
-      - SETGID
-      - SETUID
-      - DAC_OVERRIDE
+    restart: always
+    image: postgres:15
+    environment:
+      - POSTGRES_PASSWORD=frea
+      - POSTGRES_USER=frea
+      - POSTGRES_DB=meaning_of_life
+    volumes:
+      - ./db:/var/lib/postgresql/data

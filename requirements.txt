@@ -6,3 +6,5 @@ redis
 pygeonlp
 feedparser
 pyfiglet
+dataset
+psycopg2
