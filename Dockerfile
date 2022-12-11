@@ -2,6 +2,7 @@ FROM fedora:latest
 WORKDIR /app
 
 COPY ./requirements.txt .
+COPY ./searxng/src/requirements.txt ./searxng/src/
 
 COPY ./searxng/settings.yml /etc/searxng/
 COPY ./config/nginx /etc/nginx
@@ -13,6 +14,7 @@ COPY ./config/tor/torrc_e2 /etc/tor/
 RUN dnf update -y \
  && dnf install -y python3 python3-pip nginx boost mecab-ipadic sqlite libpq redis python3-devel boost-devel mecab-devel sqlite-devel libpq-devel make automake gcc gcc-c++ util-linux tor brotli \
  && pip3 install --no-cache -r requirements.txt \
+ && pip3 install --no-cache -r ./searxng/src/requirements.txt \
 
  && groupadd app \
  && useradd -d /app -s /bin/sh -g app app \
@@ -43,10 +45,6 @@ RUN find ./searxng/src/searx/static \( -name '*.html' -o -name '*.css' -o -name 
 RUN cd ./searxng/src && pip install -e . \
  && rm -rf .coveragerc .dir-locals.el .dockerignore .git .gitattributes .github .gitignore .nvmrc .pylintrc .weblate .yamllint.yml AUTHORS.rst CHANGELOG.rst CONTRIBUTING.md Dockerfile LICENSE Makefile PULL_REQUEST_TEMPLATE.md README.rst SECURITY.md babel.cfg dockerfiles docs examples manage package.json pyrightconfig-ci.json pyrightconfig.json requirements-dev.txt requirements.txt searxng_extra setup.py src tests utils
 
-ENV FREA_DEBUG_MODE=false \
-    POSTGRES_HOST=db \
-    POSTGRES_DB=frea \
-    POSTGRES_USER=frea \
-    POSTGRES_PASSWD=meaning_of_life
+ENV FREA_DEBUG_MODE=false
 
 CMD ["su", "app", "-c", "python3 -u core.py"]

@@ -112,8 +112,9 @@ tor_proxy_p2_thread.start()
 #tor_proxy_e2_thread.start()
 
 
-msg.info("Starting job manager...")
-job_manager_thread = threading.Thread(target=start_job_manager)
-job_manager_thread.start()
+if os.environ['FREA_ACTIVE_MODE'] == "true" :
+    msg.info("Starting job manager...")
+    job_manager_thread = threading.Thread(target=start_job_manager)
+    job_manager_thread.start()
 
 search_server_thread.join()
