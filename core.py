@@ -33,10 +33,19 @@ print("\n(c) 2022 nexryai\nThis program is distributed in the hope that it will 
 
 try:
     debug_mode = os.environ['FREA_DEBUG_MODE']
-except:
+except KeyError:
     msg.warn("FREA_DEBUG_MODE is undefined.")
     os.environ['FREA_DEBUG_MODE'] = "false"
 
+
+try:
+    use_active_mode = os.environ['POSTGRES_HOST']
+except KeyError:
+    msg.info("POSTGRES_HOST is undefined. Use normal mode")
+    os.environ['FREA_ACTIVE_MODE'] = "false"
+else:
+    msg.info("Use Active mode")
+    os.environ['FREA_ACTIVE_MODE'] = "true"
 
 def start_nginx():
     msg.info("Starting nginx....")

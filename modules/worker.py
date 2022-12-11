@@ -247,14 +247,17 @@ class search:
         resp.body = json.dumps(result, ensure_ascii=False)
 
         # Archive result to DB
-        result_hash = hashlib.md5(str(result).encode()).hexdigest()
-        msg.dbg(f"result_hash: {result_hash}")
-        try:
-            job_queue.insert(dict(hash=result_hash, result=str(result), archived=False, analyzed=0))
-        except Exception as e:
-            msg.fatal_error(f"Database error has occurred! \nexception: {str(e)}")
-        else:
-            msg.dbg("saved to DB")
+        if os.environ['FREA_ACTIVE_MODE'] == "true":
+            result_hash = hashlib.md5(str(result).encode()).hexdigest()
+            msg.dbg(f"result_hash: {result_hash}")
+            try:
+                job_queue.insert(dict(hash=result_hash, result=str(result), archived=False, analyzed=0))
+                db.commit()
+            except Exception as e:
+                db.rollback()
+                msg.fatal_error(f"Database error has occurred! \nexception: {str(e)}")
+            else:
+                msg.dbg("saved to DB")
 
 
 class status:
@@ -310,30 +313,31 @@ if __name__ != "__main__":
         return
 
     # Load DB config from env
-    msg.info("Loading DB config...")
+    if os.environ['FREA_ACTIVE_MODE'] == "true":
+        msg.info("Loading DB config...")
 
-    try:
-        db_host = os.environ['POSTGRES_HOST']
-        db_name = os.environ['POSTGRES_DB']
-        db_user = os.environ['POSTGRES_USER']
-        db_passwd = os.environ['POSTGRES_PASSWD']
-    except KeyError as e:
-        msg.fatal_error(f"Faild to load DB config! \nundefined environment variable: {str(e)}")
-        sys.exit(1)
+        try:
+            db_host = os.environ['POSTGRES_HOST']
+            db_name = os.environ['POSTGRES_DB']
+            db_user = os.environ['POSTGRES_USER']
+            db_passwd = os.environ['POSTGRES_PASSWD']
+        except KeyError as e:
+            msg.fatal_error(f"Faild to load DB config! \nundefined environment variable: {str(e)}")
+            sys.exit(1)
 
-    # Connect to DB
-    msg.info("Connecting to DB...")
+        # Connect to DB
+        msg.info("Connecting to DB...")
 
-    try:
-        db = dataset.connect(f"postgresql://{db_user}:{db_passwd}@{db_host}/{db_name}")
-        job_queue = db["queue"]
-    except Exception as e:
-        msg.fatal_error(f"Faild to connect DB! \nexception: {str(e)}")
-        sys.exit(1)
-    else:
-        msg.info("DB connection is OK !")
+        try:
+            db = dataset.connect(f"postgresql://{db_user}:{db_passwd}@{db_host}/{db_name}")
+            job_queue = db["queue"]
+        except Exception as e:
+            msg.fatal_error(f"Faild to connect DB! \nexception: {str(e)}")
+            sys.exit(1)
+        else:
+            msg.info("DB connection is OK !")
 
 
 if __name__ == "__main__":
     msg.dbg("Debug mode!!!!")
-    uvicorn.run("worker:app", host="0.0.0.0", port=8889, workers=5, log_level="info")
+    uvicorn.run("worker:app", host="0.0.0.0", port=8889, workers=5, log_level="error")
