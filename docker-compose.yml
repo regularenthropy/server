@@ -12,14 +12,17 @@ services:
       - POSTGRES_HOST=db
       - POSTGRES_DB=frea
       - POSTGRES_USER=frea
-      - POSTGRES_PASSWD=meaning_of_life
+      - POSTGRES_PASSWD=MeaningOfLife
+    links:
+      - db
 
   db:
     restart: always
     image: postgres:15
     environment:
-      - POSTGRES_PASSWORD=frea
+      - POSTGRES_DB=frea
       - POSTGRES_USER=frea
-      - POSTGRES_DB=meaning_of_life
+      - POSTGRES_PASSWORD=MeaningOfLife
+
     volumes:
       - ./db:/var/lib/postgresql/data

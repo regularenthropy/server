@@ -37,11 +37,14 @@ except KeyError as e:
     msg.fatal_error(f"Faild to load DB config! \nundefined environment variable: {str(e)}")
     sys.exit(1)
 
+db_url = f"postgresql://{db_user}:{db_passwd}@{db_host}/{db_name}"
+msg.dbg(f"DB url: {db_url}")
+
 # Connect to DB
 msg.info("Connecting to DB...")
 
 try:
-    db = dataset.connect(f"postgresql://{db_user}:{db_passwd}@{db_host}/{db_name}")
+    db = dataset.connect(db_url)
     job_queue = db["queue"]
 except Exception as e:
     msg.fatal_error(f"Faild to connect DB! \nexception: {str(e)}")
