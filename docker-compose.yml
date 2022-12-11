@@ -39,3 +39,6 @@ services:
       - ./tmp/pgadmin:/var/lib/pgadmin
     links:
       - db
+    logging:
+      # ターミナルを汚しまくるのでログを粛清
+      driver: none
