@@ -58,9 +58,9 @@
         <br>
         <a href="https://git.sda1.net/frea/search-api">🔍 {{ _('Source code') }}</a>　
         {% if get_setting('general.privacypolicy_url') %}
-        | <a href="{{ get_setting('general.privacypolicy_url') }}">🔒 {{ _('Privacy policy') }}</a>　
+        <a href="{{ get_setting('general.privacypolicy_url') }}">🔒 {{ _('Privacy policy') }}</a>　
         {% else %}
-          <a href="https://github.com/orgs/frea-search/repositories">🐛 {{ _('Issue tracker') }}</a>　
+        <a href="https://github.com/orgs/frea-search/repositories">🐛 {{ _('Issue tracker') }}</a>　
         {% endif %}
         <a href="{{ donation_url }}">💴 {{ _('Donate') }}</a>　
     </p>

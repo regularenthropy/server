@@ -22,16 +22,21 @@ import falcon
 import falcon.asgi
 import uvicorn
 
+import os
+import sys
 import requests
 import json
+import ast
 import yaml
 import tldextract
 import hashlib
 import asyncio
 from threading import Thread
+import dataset
 import redis
 from html import escape
 import urllib.parse
+import time
 
 import msg
 import inteli_e
@@ -162,18 +167,32 @@ class search:
         except Exception as e:
             msg.fatal_error(f"Exception: {e}")
 
-        # request to SearXNG
-        msg.dbg("send request to SearXNG.")
-
-        try:
-            upstream_request = requests.get(f"http://127.0.0.1:8888/search?q={query_encoded}&language={language}&format=json&category_{category}=on&pageno={pageno}")
-            result = upstream_request.json()
-        except Exception as e:
-            result = {"error": "UPSTREAM_ENGINE_ERROR"}
-            resp.status = falcon.HTTP_500
-            resp.body = json.dumps(result, ensure_ascii=False)
-            msg.fatal_error(f"UPSTREAM_ENGINE_ERROR has occurred! \nexception: {str(e)}")
-            return
+        # Check cache
+        if redis.exists(f"cache.{query_encoded}"):
+            msg.info("Use cache !")
+            cache_used = True
+            try:
+                cache_str = redis.get(f"cache.{query_encoded}").decode("UTF-8")
+                result = ast.literal_eval(cache_str)
+            except Exception as e:
+                result = {"error": "CACHE_ERROR"}
+                resp.status = falcon.HTTP_500
+                resp.body = json.dumps(result, ensure_ascii=False)
+                msg.fatal_error(f"CACHE_ERROR has occurred! \nexception: {str(e)}")
+                return
+        else:
+            # request to SearXNG
+            msg.dbg("send request to SearXNG.")
+            cache_used = False
+            try:
+                upstream_request = requests.get(f"http://127.0.0.1:8888/search?q={query_encoded}&language={language}&format=json&category_{category}=on&pageno={pageno}")
+                result = upstream_request.json()
+            except Exception as e:
+                result = {"error": "UPSTREAM_ENGINE_ERROR"}
+                resp.status = falcon.HTTP_500
+                resp.body = json.dumps(result, ensure_ascii=False)
+                msg.fatal_error(f"UPSTREAM_ENGINE_ERROR has occurred! \nexception: {str(e)}")
+                return
 
 
         i = len(result["results"]) - 1
@@ -238,17 +257,36 @@ class search:
             msg.fatal_error(f"The escape of the results failed. The request failed for security reasons. \nException: {e}")
             result = {"error": "RESULT_ESCAPE_ERROR"}
         
+        # Set number_of_results and time_stamp
+        result["number_of_results"] = len(result["results"])
+
+        # make response
         resp.body = json.dumps(result, ensure_ascii=False)
 
-        result_hash = hashlib.md5(str(result).encode()).hexdigest()
-        msg.dbg(f"result_hash: {result_hash}")
-        try:
-            redis.set(f"archive.{result_hash}", str(result))
-            redis.set(f"queue.{result_hash}", "unprocessed")
-        except Exception as e:
-            msg.fatal_error(f"Database error has occurred! \nexception: {str(e)}")
-        else:
-            msg.dbg("saved to DB")
+        # Make cache
+        if len(result["unresponsive_engines"]) < 2 and not cache_used:
+            msg.info("Make cache !")
+            try:
+                redis.set(f"cache.{query_encoded}", str(result))
+                redis.expire(f"cache.{query_encoded}", 21600)
+            except Exception as e:
+                msg.fatal_error(f"Cache generation failed! \nexception: {str(e)}")
+            else:
+                msg.dbg("cache saved")
+
+        # Archive result to DB
+        if os.environ['FREA_ACTIVE_MODE'] == "true" and not cache_used :
+            del result["query"]
+            result_hash = hashlib.md5(str(result).encode()).hexdigest()
+            msg.dbg(f"result_hash: {result_hash}")
+            try:
+                job_queue.insert(dict(hash=result_hash, result=str(result), archived=False, analyzed=0))
+                db.commit()
+            except Exception as e:
+                db.rollback()
+                msg.fatal_error(f"Database error has occurred! \nexception: {str(e)}")
+            else:
+                msg.dbg("saved to DB")
 
 
 class status:
@@ -303,13 +341,38 @@ if __name__ != "__main__":
         msg.dbg(f"@run_inteli_e inteli_e_result={inteli_e_result[0]}")
         return
 
+    # Config redis
     try:
-        redis = redis.Redis(host='db', port=6379, db=0)
-        redis.set("test", "ok")
+        redis = redis.Redis(host='127.0.0.1', port=6379, db=1)
     except Exception as e:
         msg.fatal_error(f"Faild to connect DB! \nexception: {str(e)}")
     else:
-        msg.info("DB ok!")
+        msg.info("Redis ok!")
+
+
+    # Load DB config from env
+    if os.environ['FREA_ACTIVE_MODE'] == "true":
+        msg.info("Loading DB config...")
+        try:
+            db_host = os.environ['POSTGRES_HOST']
+            db_name = os.environ['POSTGRES_DB']
+            db_user = os.environ['POSTGRES_USER']
+            db_passwd = os.environ['POSTGRES_PASSWD']
+        except KeyError as e:
+            msg.fatal_error(f"Faild to load DB config! \nundefined environment variable: {str(e)}")
+            sys.exit(1)
+
+        # Connect to DB
+        msg.info("Connecting to DB...")
+
+        try:
+            db = dataset.connect(f"postgresql://{db_user}:{db_passwd}@{db_host}/{db_name}")
+            job_queue = db["queue"]
+        except Exception as e:
+            msg.fatal_error(f"Faild to connect DB! \nexception: {str(e)}")
+            sys.exit(1)
+        else:
+            msg.info("DB connection is OK !")
 
 
 if __name__ == "__main__":

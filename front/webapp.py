@@ -143,6 +143,13 @@ if settings['server']['use_turnstile'] == True:
 
     redis = redis.Redis(host=redis_host, port=redis_port, db=1)
 
+try:
+    _privacypolicy_url = os.environ['FREA_PRIVACY_POLICY']
+except KeyError:
+    pass
+else:
+    settings['general']['privacypolicy_url'] = _privacypolicy_url
+
 # check secret_key
 if not searx_debug and settings['server']['secret_key'] == 'ultrasecretkey':
     logger.error('server.secret_key is not changed. Please use something else instead of ultrasecretkey.')

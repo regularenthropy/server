@@ -211,6 +211,12 @@ def main(query):
     if 'ウクライナ' in query:
         w_message = "ユニセフの緊急募金に参加しウクライナを支援できます。"
         link = "https://www.unicef.or.jp/kinkyu/ukraine/"
+    
+    if query == 'ping':
+        w_message = "pong!"
+
+    if query == '発狂':
+        w_message = "ヌァァァァァァァァァァァァァァァァァァァァァァァァァァァァァァァァァァンンンンオオオオンンオンオンオンオンンンンンンンンン゛ン゛！！！！！！！！！！！！！！！！"
 
     if 'w_message' in locals():
         if 'link' in locals():

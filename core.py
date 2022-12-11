@@ -18,11 +18,13 @@ along with Frea Search. If not, see < http://www.gnu.org/licenses/ >.
                    nexryai <gnomer@tuta.io>
 '''
 
-import msg
+from modules import msg
+
 import os
 from pyfiglet import Figlet
 import subprocess
 import threading
+
 
 aa = Figlet(font="slant")
 welcome_aa = aa.renderText("Frea Search")
@@ -33,36 +35,46 @@ print("\n(c) 2022 nexryai\nThis program is distributed in the hope that it will 
 
 try:
     debug_mode = os.environ['FREA_DEBUG_MODE']
-except:
+except KeyError:
     msg.warn("FREA_DEBUG_MODE is undefined.")
     os.environ['FREA_DEBUG_MODE'] = "false"
 
 
+try:
+    use_active_mode = os.environ['POSTGRES_HOST']
+except KeyError:
+    msg.info("POSTGRES_HOST is undefined. Use normal mode")
+    os.environ['FREA_ACTIVE_MODE'] = "false"
+else:
+    msg.info("Use Active mode")
+    os.environ['FREA_ACTIVE_MODE'] = "true"
+
+
 def start_nginx():
     msg.info("Starting nginx....")
-    subprocess.call(["python3", "-u", "nginx.py"])
+    subprocess.call(["python3", "-u", "modules/nginx.py"])
 
 def start_search_api_server():
     msg.info("Starting search API server workers....")
-    subprocess.call(["python3", "-u", "worker.py"])
+    subprocess.call(["python3", "-u", "modules/worker.py"])
 
 def start_front():
     msg.info("Starting UI....")
-    subprocess.call(["python3", "-u", "start_ui.py"])
+    subprocess.call(["python3", "-u", "modules/start_ui.py"])
 
 def start_searxng():
     msg.info("Starting SearXNG....")
-    subprocess.call(["python3", "-u", "searx.py"])
+    subprocess.call(["python3", "-u", "modules/searx.py"])
 
 def start_redis():
     msg.info("Starting redis....")
-    subprocess.call(["python3", "-u", "redis_server.py"])
+    subprocess.call(["python3", "-u", "modules/redis_server.py"])
 
 def start_job_manager():
-    subprocess.call(["python3", "-u", "job_manager.py"])
+    subprocess.call(["python3", "-u", "modules/job_manager.py"])
 
 def start_tor(n):
-    subprocess.call(["python3", "-u", "tor.py", str(n)])
+    subprocess.call(["python3", "-u", "modules/tor.py", str(n)])
 
 # Start nginx
 nginx_server_thread = threading.Thread(target=start_nginx)
@@ -103,8 +115,9 @@ tor_proxy_p2_thread.start()
 #tor_proxy_e2_thread.start()
 
 
-msg.info("Starting job manager...")
-job_manager_thread = threading.Thread(target=start_job_manager)
-job_manager_thread.start()
+if os.environ['FREA_ACTIVE_MODE'] == "true" :
+    msg.info("Starting job manager...")
+    job_manager_thread = threading.Thread(target=start_job_manager)
+    job_manager_thread.start()
 
 search_server_thread.join()
