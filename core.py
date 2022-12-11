@@ -24,7 +24,7 @@ import os
 from pyfiglet import Figlet
 import subprocess
 import threading
-import yaml
+
 
 aa = Figlet(font="slant")
 welcome_aa = aa.renderText("Frea Search")
