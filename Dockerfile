@@ -2,7 +2,6 @@ FROM fedora:latest
 WORKDIR /app
 
 COPY ./requirements.txt .
-COPY ./searxng/src/requirements.txt ./searxng/src/
 
 COPY ./searxng/settings.yml /etc/searxng/
 COPY ./config/nginx /etc/nginx
@@ -14,7 +13,6 @@ COPY ./config/tor/torrc_e2 /etc/tor/
 RUN dnf update -y \
  && dnf install -y python3 python3-pip nginx boost mecab-ipadic sqlite libpq redis python3-devel boost-devel mecab-devel sqlite-devel libpq-devel make automake gcc gcc-c++ util-linux tor brotli \
  && pip3 install --no-cache -r requirements.txt \
- && pip3 install --no-cache -r ./searxng/src/requirements.txt \
 
  && groupadd app \
  && useradd -d /app -s /bin/sh -g app app \
