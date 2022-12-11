@@ -13,7 +13,6 @@ services:
       - POSTGRES_DB=frea
       - POSTGRES_USER=frea
       - POSTGRES_PASSWD=MeaningOfLife
-      - FREA_PRIVACY_POLICY=https://nexryai.online/docs/privacy/
     links:
       - db
 
