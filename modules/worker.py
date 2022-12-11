@@ -240,8 +240,13 @@ class search:
             msg.fatal_error(f"The escape of the results failed. The request failed for security reasons. \nException: {e}")
             result = {"error": "RESULT_ESCAPE_ERROR"}
         
+        # Set number_of_results
+        result["number_of_results"] = len(result["results"])
+
+        # make response
         resp.body = json.dumps(result, ensure_ascii=False)
 
+        # Archive result to DB
         result_hash = hashlib.md5(str(result).encode()).hexdigest()
         msg.dbg(f"result_hash: {result_hash}")
         try:
