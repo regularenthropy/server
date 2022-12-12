@@ -157,6 +157,8 @@ class search:
 
         query_encoded = encode_query(query)
         msg.dbg(f"query_encoded={query_encoded}")
+        
+        cache_key = f"cache.{category}.{query_encoded}.{pageno}.{language}"
 
         msg.dbg("Load intelligence-engine")
 
@@ -168,11 +170,11 @@ class search:
             msg.fatal_error(f"Exception: {e}")
 
         # Check cache
-        if redis.exists(f"cache.{query_encoded}"):
+        if redis.exists(cache_key):
             msg.info("Use cache !")
             cache_used = True
             try:
-                cache_str = redis.get(f"cache.{query_encoded}").decode("UTF-8")
+                cache_str = redis.get(cache_key).decode("UTF-8")
                 result = ast.literal_eval(cache_str)
             except Exception as e:
                 result = {"error": "CACHE_ERROR"}
@@ -267,8 +269,8 @@ class search:
         if len(result["unresponsive_engines"]) < 2 and not cache_used:
             msg.info("Make cache !")
             try:
-                redis.set(f"cache.{query_encoded}", str(result))
-                redis.expire(f"cache.{query_encoded}", 21600)
+                redis.set(cache_key, str(result))
+                redis.expire(cache_key, 21600)
             except Exception as e:
                 msg.fatal_error(f"Cache generation failed! \nexception: {str(e)}")
             else:
