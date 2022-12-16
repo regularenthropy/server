@@ -41,8 +41,8 @@ except KeyError as e:
     msg.fatal_error(f"Faild to load DB config! \nundefined environment variable: {str(e)}")
     sys.exit(1)
 
-db_url = f"postgresql://{db_user}:[!DB password was hidden for security!]@{db_host}/{db_name}"
-msg.dbg(f"DB url: {db_url}")
+db_url = f"postgresql://{db_user}:{db_passwd}@{db_host}/{db_name}"
+msg.dbg(f"DB url: postgresql://{db_user}:[!DB password was hidden for security!]@{db_host}/{db_name}")
 
 # Connect to DB
 msg.info("Connecting to DB...")
