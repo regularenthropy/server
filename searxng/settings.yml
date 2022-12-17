@@ -481,7 +481,7 @@ engines:
     shortcut: wd
     timeout: 3.0
     weight: 2
-    disabled: false
+    disabled: true
     tests: *tests_infobox
 
   - name: duckduckgo

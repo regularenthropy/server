@@ -262,11 +262,21 @@ class search:
         # Set number_of_results and time_stamp
         result["number_of_results"] = len(result["results"])
         
+        # Optimize answer
+        try:
+            del result["answers"][1:]
+        except:
+            pass
+
         # Optimize infobox
-        del result["infoboxes"][0]["urls"]
-        del result["infoboxes"][0]["attributes"]
-        del result["infoboxes"][0]["engine"]
-        del result["infoboxes"][0]["engines"]
+        try:
+            del result["infoboxes"][0]["urls"]
+            del result["infoboxes"][0]["attributes"]
+            del result["infoboxes"][0]["engine"]
+            del result["infoboxes"][0]["engines"]
+            del result["infoboxes"][1:]
+        except:
+            pass
 
         # make response
         resp.body = json.dumps(result, ensure_ascii=False)
