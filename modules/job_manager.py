@@ -51,6 +51,7 @@ try:
     db = dataset.connect(db_url)
     job_queue = db["queue"]
     reports = db["reports"]
+    index = db["index"]
 except Exception as e:
     msg.fatal_error(f"Faild to connect DB! \nexception: {str(e)}")
     sys.exit(1)
@@ -112,6 +113,14 @@ while True:
                             db.rollback()
 
                 time.sleep(0.1)
+
+        
+        # ToDo: 既にインデックスに存在する項目を登録する場合、応答しないエンジンが少ない方が優先されどちらも応答しないエンジンの数が同じなら新しい方を優先する。また何回も検索されているならスコアを上げる。
+        try:
+            index.insert(dict(query=analyze_result["query"], result=analyze_result["result"], socer=1))
+        except Exception as e:
+            msg.fatal_error(f"Faild to save index to DB. \nException{e}")
+            db.rollback()
 
         analyze_result["analyzed"] = analyzer_version
 
