@@ -160,15 +160,6 @@ class search:
         
         cache_key = f"cache.{category}.{query_encoded}.{pageno}.{language}"
 
-        msg.dbg("Load intelligence-engine")
-
-        try:
-            inteli_e_result = []
-            inteli_e_thread = Thread(target=run_inteli_e, args=(query, inteli_e_result))
-            inteli_e_thread.start()
-        except Exception as e:
-            msg.fatal_error(f"Exception: {e}")
-
         # Check cache
         if redis.exists(cache_key):
             msg.info("Use cache !")
@@ -183,6 +174,16 @@ class search:
                 msg.fatal_error(f"CACHE_ERROR has occurred! \nexception: {str(e)}")
                 return
         else:
+            # Search without cache
+            msg.dbg("Load intelligence-engine")
+
+            try:
+                inteli_e_result = []
+                inteli_e_thread = Thread(target=run_inteli_e, args=(query, inteli_e_result))
+                inteli_e_thread.start()
+            except Exception as e:
+                msg.fatal_error(f"Exception: {e}")
+            
             # request to SearXNG
             msg.dbg("send request to SearXNG.")
             cache_used = False
@@ -212,28 +213,30 @@ class search:
 
             i -= 1
 
-        msg.dbg("Wait for inteli_e")
-        try:
-            while inteli_e_thread.is_alive():
-                pass
-            msg.dbg(f"inteli_e result: {inteli_e_result[0]}")
-        except Exception as e:
-            msg.error(f"Exception: {e}")
-        
-        try:
-            if result["answers"][0] != None:
-                result["answers"][0] = {'type': 'answer', 'answer': result["answers"][0]}
-        except Exception as e:
-            msg.dbg("No origin answer")
+        if not cache_used:
+            msg.dbg("Wait for inteli_e")
 
-        if inteli_e_result[0] != None:
-            msg.dbg("Overwrite answers[0] by inteli_e_result !")
             try:
-                result["answers"].insert(0, inteli_e_result[0])
+                while inteli_e_thread.is_alive():
+                    pass
+                msg.dbg(f"inteli_e result: {inteli_e_result[0]}")
             except Exception as e:
                 msg.error(f"Exception: {e}")
-        else:
-            msg.dbg("No info from inteli_e")
+        
+            try:
+                if result["answers"][0] != None:
+                    result["answers"][0] = {'type': 'answer', 'answer': result["answers"][0]}
+            except Exception as e:
+                msg.dbg("No origin answer")
+
+            if inteli_e_result[0] != None:
+                msg.dbg("Overwrite answers[0] by inteli_e_result !")
+                try:
+                    result["answers"].insert(0, inteli_e_result[0])
+                except Exception as e:
+                    msg.error(f"Exception: {e}")
+            else:
+                msg.dbg("No info from inteli_e")
 
         # Anti XSS
         try:
