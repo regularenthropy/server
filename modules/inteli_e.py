@@ -38,6 +38,7 @@ def get_weather(query):
         
     lon = get_location[0]['geometry']['coordinates'][0]
     lat = get_location[0]['geometry']['coordinates'][1]
+    location_name = get_location[0]['properties']['surface']
         
     # get weather data from met norway
     met_api_request_url = "https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=" + str(lat) + "&lon=" + str(lon)
@@ -94,8 +95,50 @@ def get_weather(query):
     mintemp_d2 = get_min_temp(1)
     maxtemp_d3 = get_max_temp(2)
     mintemp_d3 = get_min_temp(2)
+    
+    def weather_icon_name_to_japanese(name):
+        if "thunder" in name:
+            text = "雷を伴う"
+        else:
+            text = ""
+        
+        if "clearsky" in name:
+            text = "快晴"       
+        elif "fair" in name:
+            text += "晴れ"
+        elif "fog" in name:
+            text = "霧"
+        # 雪
+        elif "lightsnow" in name or "lightssnow" in name:
+            text += "弱い雪"
+        elif "heavysnow" in name:
+            text += "大雪"
+        elif "snow" in name:
+            text += "雪"
+        # 雨
+        elif "lightrain" in name:
+            text += "小雨"
+        elif "heavyrain" in name:
+            text += "強雨"
+        elif "rain" in name:
+            text += "雨"
+        #みぞれ
+        elif "lightsleet" in name or "lightssleet" in name:
+            text += "弱いみぞれ"
+        elif "heavysleet" in name:
+            text += "強いみぞれ"
+        elif "sleet" in name:
+            text += "みぞれ"
+        # 曇り
+        elif "partlycloudy" in name:
+            text += "薄曇り"
+        elif name == "cloudy":
+            text = "曇り"
+        
+        return text
+        
 
-    response = {'weather': weather, 'temp_now': temp_now, 'weather_d2': weather_d2, 'weather_d3': weather_d3, 'maxtemp_d2': maxtemp_d2, 'mintemp_d2': mintemp_d2, 'maxtemp_d3': maxtemp_d3, 'mintemp_d3': mintemp_d3, 'd2_disp':  str(date_d2_month) + '/' + str(date_d2_day), 'd3_disp':  str(date_d3_month) + '/' + str(date_d3_day)} 
+    response = {'weather': weather_icon_name_to_japanese(weather), 'temp_now': temp_now, 'weather_d2': weather_icon_name_to_japanese(weather_d2), 'weather_d3': weather_icon_name_to_japanese(weather_d3), 'maxtemp_d2': maxtemp_d2, 'mintemp_d2': mintemp_d2, 'maxtemp_d3': maxtemp_d3, 'mintemp_d3': mintemp_d3, 'd2_disp':  str(date_d2_month) + '/' + str(date_d2_day), 'd3_disp':  str(date_d3_month) + '/' + str(date_d3_day), 'location_name': location_name} 
     return response
 
 
@@ -184,8 +227,8 @@ def main(query):
             dbglog("Weather result is NO_DATA")
             return None
 
-        message="現在の天気: " + result['weather']
-
+        message=f"今後の{result['location_name']}の天気は{result['weather']}、現在の気温は{result['temp_now']}℃です。明日（{result['d2_disp']}）は最高気温{result['maxtemp_d2']}℃で{result['weather_d2']}、明後日（{result['d3_disp']}）は最高気温{result['maxtemp_d3']}℃で{result['weather_d2']}になる予想です。"
+        '''
         weather_data = {'type': 'weather',  'answer': message, 
                         'weather': 'MET Norway', 
                         'hide_icon': 'true',
@@ -197,7 +240,8 @@ def main(query):
                         'weather_temp_3d': result['maxtemp_d3'],
                         'd2_disp': result['d2_disp'],
                         'd3_disp': result['d3_disp']}
-        
+        '''
+        weather_data = {'type': 'answer', 'answer': message}
         return weather_data
 
     if 'コロナ' in query:
