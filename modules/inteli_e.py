@@ -187,30 +187,30 @@ def main(query):
         message="現在の天気: " + result['weather']
 
         weather_data = {'type': 'weather',  'answer': message, 
-                                                                                                       'weather': 'MET Norway', 
-                                                                                                       'hide_icon': 'true',
-                                                                                                       'weather_icon': result['weather'],
-                                                                                                       'weather_temp': result['temp_now'],
-                                                                                                       'weather_icon_2d': result['weather_d2'],
-                                                                                                       'weather_temp_2d': result['maxtemp_d2'],
-                                                                                                       'weather_icon_3d': result['weather_d3'],
-                                                                                                       'weather_temp_3d': result['maxtemp_d3'],
-                                                                                                       'd2_disp': result['d2_disp'],
-                                                                                                       'd3_disp': result['d3_disp']}
+                        'weather': 'MET Norway', 
+                        'hide_icon': 'true',
+                        'weather_icon': result['weather'],
+                        'weather_temp': result['temp_now'],
+                        'weather_icon_2d': result['weather_d2'],
+                        'weather_temp_2d': result['maxtemp_d2'],
+                        'weather_icon_3d': result['weather_d3'],
+                        'weather_temp_3d': result['maxtemp_d3'],
+                        'd2_disp': result['d2_disp'],
+                        'd3_disp': result['d3_disp']}
         
         return weather_data
 
     if 'コロナ' in query:
         w_message = "新型コロナウイルス感染症に関する正しい情報をお求めの場合は、厚生労働省のwebサイトをご確認ください。"
-        link = "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000164708_00001.html"
+        #link = "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000164708_00001.html"
 
     if 'ワクチン' in query:
         w_message = "新型コロナワクチンに関する信頼できる情報をお求めの場合は、公的機関のページが役に立つでしょう。"
-        link = "https://v-sys.mhlw.go.jp/"
+        #link = "https://v-sys.mhlw.go.jp/"
 
     if 'ウクライナ' in query:
         w_message = "ユニセフの緊急募金に参加しウクライナを支援できます。"
-        link = "https://www.unicef.or.jp/kinkyu/ukraine/"
+        #link = "https://www.unicef.or.jp/kinkyu/ukraine/"
     
     if query == 'ping':
         w_message = "pong!"
