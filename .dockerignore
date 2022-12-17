@@ -1,1 +1,7 @@
 ./tmp
+./CODE_OF_CONDUCT.md
+./docs
+./Dockerfile
+./README.md
+./docker-compose.yml
+./mkdocs.yml

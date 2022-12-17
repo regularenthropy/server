@@ -2025,6 +2025,7 @@ domains:
   - heisei.or.jp
   - blog.goo.ne.jp
   - hokkaido.med.or.jp
+  - www.hokkaido.med.or.jp
   - second-opinion-munakata.com
   - tech-parrot.com
   - creamrobo.com
@@ -2123,3 +2124,7 @@ domains:
   - oann.com
   - breitbart.com
   - beforeitsnews.com
+  #- sizen-kankyo.com
+  #- ochakai-akasaka.com
+  #- asyura2.com
+  #- honbetsu-cl.com

@@ -27,7 +27,7 @@ import sys
 import ast
 import dataset
 
-analyzer_version = 102
+analyzer_version = 103
 
 # Load DB config from env
 msg.info("Loading DB config...")
@@ -65,12 +65,20 @@ except Exception as e:
     db.rollback()
     sys.exit(1)
 
+
+if not os.path.exists("/app/mecab/dic_installed"):
+    msg.info("Download MeCab dictionary for analyze")
+    _mecab_dic_dl_result = os.system("bash /app/modules/download_dic.sh")
+    if _mecab_dic_dl_result != 0:
+        msg.fatal_error(f"Faild to download MeCab dictionary! \nExit code: {str(_mecab_dic_dl_result)}")
+
 while True:
     time.sleep(10)
     msg.dbg("Check job queue...")
     job_queue.delete(hash="TEST")
 
     for analyze_result in db['queue']:
+        msg.dbg("Loading result from job queue...")
         result_dict = ast.literal_eval(analyze_result["result"])
 
         if analyze_result["analyzed"] < analyzer_version :
@@ -83,6 +91,7 @@ while True:
                 except KeyError:
                     _chk_content = None
 
+                msg.dbg(f"Check result...url: {_chk_url}  title: {_chk_title}")
                 if analyze.chk_text(_chk_title) == 1:
                     msg.info(f"Suspicious site detected! url: {_chk_url}  title: {_chk_title}")
                     try:
