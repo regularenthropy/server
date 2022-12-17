@@ -141,27 +141,6 @@
   ],
 ```
 
-#### 天気情報
-`weather_icon_2d`は二日目（翌日）の天気です。
-```
-  "answers": [
-    {
-      "type": "weather",
-      "answer": "現在の天気: fair_day",
-      "weather": "MET Norway",
-      "hide_icon": "true",
-      "weather_icon": "fair_day",
-      "weather_temp": 15.9,
-      "weather_icon_2d": "lightrain",
-      "weather_temp_2d": 14.5,
-      "weather_icon_3d": "lightrainshowers_day",
-      "weather_temp_3d": 17.6,
-      "d2_disp": "11/20",
-      "d3_disp": "11/21"
-    }
-  ],
-```
-
 #### 津波情報あり
 これの実装は必須ではありませんが、目立つよう特別メッセージを表示することを強く推奨します。  
 ```
