@@ -159,6 +159,7 @@ class search:
         msg.dbg(f"query_encoded={query_encoded}")
         
         cache_key = f"cache.{category}.{query_encoded}.{pageno}.{language}"
+        index_key = f"{category}.{query_encoded}.{pageno}.{language}"
 
         # Check cache
         if redis.exists(cache_key):
@@ -176,6 +177,7 @@ class search:
         else:
             # Search without cache
             msg.dbg("Load intelligence-engine")
+            cache_used = False
 
             try:
                 inteli_e_result = []
@@ -184,26 +186,38 @@ class search:
             except Exception as e:
                 msg.fatal_error(f"Exception: {e}")
             
-            # request to SearXNG
-            msg.dbg("send request to SearXNG.")
-            cache_used = False
+            if index.count(query=index_key) > 0:
+                try:
+                    msg.dbg("Use result in index.")
+                    result_str = index.find_one(query=index_key)["result"]
+                    index_score = index.find_one(query=index_key)["score"]
+                    result = ast.literal_eval(result_str)
+                except Exception as e:
+                    result = {"error": "INDEX_ERROR"}
+                    resp.status = falcon.HTTP_500
+                    resp.body = json.dumps(result, ensure_ascii=False)
+                    msg.fatal_error(f"INDEX_ERROR has occurred! \nexception: {str(e)}")
+                    return
+            else:
+                # request to SearXNG
+                msg.dbg("send request to SearXNG.")
             
-            # Lock SearXNG
-            redis.set("searxng_locked", 1)
-            redis.expire("searxng_locked", 30)
+                # Lock SearXNG
+                redis.set("searxng_locked", 1)
+                redis.expire("searxng_locked", 30)
 
-            try:
-                upstream_request = requests.get(f"http://127.0.0.1:8888/search?q={query_encoded}&language={language}&format=json&category_{category}=on&pageno={pageno}")
-                result = upstream_request.json()
-            except Exception as e:
-                result = {"error": "UPSTREAM_ENGINE_ERROR"}
-                resp.status = falcon.HTTP_500
-                resp.body = json.dumps(result, ensure_ascii=False)
-                msg.fatal_error(f"UPSTREAM_ENGINE_ERROR has occurred! \nexception: {str(e)}")
-                return
+                try:
+                    upstream_request = requests.get(f"http://127.0.0.1:8888/search?q={query_encoded}&language={language}&format=json&category_{category}=on&pageno={pageno}")
+                    result = upstream_request.json()
+                except Exception as e:
+                    result = {"error": "UPSTREAM_ENGINE_ERROR"}
+                    resp.status = falcon.HTTP_500
+                    resp.body = json.dumps(result, ensure_ascii=False)
+                    msg.fatal_error(f"UPSTREAM_ENGINE_ERROR has occurred! \nexception: {str(e)}")
+                    return
             
-            # Unlock SearXNG after 10 sec
-            redis.expire("searxng_locked", 10)
+                # Unlock SearXNG after 10 sec
+                redis.expire("searxng_locked", 10)
 
 
         i = len(result["results"]) - 1
@@ -272,7 +286,7 @@ class search:
         
         # Set number_of_results and time_stamp
         result["number_of_results"] = len(result["results"])
-        
+
         # Optimize answer
         try:
             del result["answers"][1:]
@@ -304,12 +318,11 @@ class search:
                 msg.dbg("cache saved")
 
         # Archive result to DB
-        if os.environ['FREA_ACTIVE_MODE'] == "true" and not cache_used :
-            del result["query"]
+        if os.environ['FREA_ACTIVE_MODE'] == "true" and not cache_used:
             result_hash = hashlib.md5(str(result).encode()).hexdigest()
             msg.dbg(f"result_hash: {result_hash}")
             try:
-                job_queue.insert(dict(hash=result_hash, result=str(result), archived=False, analyzed=0, query=query_encoded))
+                job_queue.insert(dict(hash=result_hash, result=str(result), archived=False, analyzed=0, query=index_key))
                 db.commit()
             except Exception as e:
                 db.rollback()
@@ -397,6 +410,7 @@ if __name__ != "__main__":
         try:
             db = dataset.connect(f"postgresql://{db_user}:{db_passwd}@{db_host}/{db_name}")
             job_queue = db["queue"]
+            index = db["index"]
         except Exception as e:
             msg.fatal_error(f"Faild to connect DB! \nexception: {str(e)}")
             sys.exit(1)

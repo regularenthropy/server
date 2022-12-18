@@ -131,13 +131,13 @@ while True:
                     for _old_index in index.find(query=analyze_result['query']):
                         _old_index_result = ast.literal_eval(_old_index["result"])
                         _old_index_score = _old_index["score"]
-                        msg.info(f"Old result unresponsive_engines: {_old_index_result['unresponsive_engines']} Result unresponsive_engines: {result_dict['unresponsive_engines']}")
+                        msg.dbg(f"Old result unresponsive_engines: {_old_index_result['unresponsive_engines']} Result unresponsive_engines: {result_dict['unresponsive_engines']}")
                         if len(_old_index_result["unresponsive_engines"]) > len(result_dict["unresponsive_engines"]) :
-                            msg.info("Update old result!")
+                            msg.info("Update old result in the index!")
                             index.delete(query=analyze_result["query"])
                             index.insert(dict(query=analyze_result["query"], result=analyze_result["result"], score=_old_index_score + 1))
                         else:
-                            msg.info("Do not update old result!")
+                            msg.info("Do not update old result in the index!")
                             index.update(dict(query=analyze_result["query"], result=analyze_result["result"], score=_old_index_score + 1), ["query"])
                              
                 else:
