@@ -77,11 +77,13 @@ while True:
     time.sleep(10)
     msg.dbg("Check job queue...")
     job_queue.delete(hash="TEST")
+    job_queue.delete(query=None)
+    job_queue.delete(score=None)
 
     for analyze_result in db['queue']:
         msg.dbg("Loading result from job queue...")
         result_dict = ast.literal_eval(analyze_result["result"])
-
+        
         if analyze_result["analyzed"] < analyzer_version :
             for chk_result in result_dict["results"]:
 
@@ -113,20 +115,44 @@ while True:
                             db.rollback()
 
                 time.sleep(0.1)
+        
+        if len(result_dict["unresponsive_engines"]) >= 4:
+            job_queue.delete(hash=analyze_result["hash"])
+            break
 
         
         # ToDo: 既にインデックスに存在する項目を登録する場合、応答しないエンジンが少ない方が優先されどちらも応答しないエンジンの数が同じなら新しい方を優先する。また何回も検索されているならスコアを上げる。
         try:
-            index.insert(dict(query=analyze_result["query"], result=analyze_result["result"], socer=1))
-        except Exception as e:
-            msg.fatal_error(f"Faild to save index to DB. \nException{e}")
-            db.rollback()
+            if analyze_result["query"] != None:
+                msg.info(f"query: {analyze_result['query']}")
 
-        analyze_result["analyzed"] = analyzer_version
+                if index.count(query=analyze_result['query']) > 0:
+                    msg.warn(f"Same query found in index! {index.count(query=analyze_result['query'])}")
+                    for _old_index in index.find(query=analyze_result['query']):
+                        _old_index_result = ast.literal_eval(_old_index["result"])
+                        _old_index_score = _old_index["score"]
+                        msg.info(f"Old result unresponsive_engines: {_old_index_result['unresponsive_engines']} Result unresponsive_engines: {result_dict['unresponsive_engines']}")
+                        if len(_old_index_result["unresponsive_engines"]) > len(result_dict["unresponsive_engines"]) :
+                            msg.info("Update old result!")
+                            index.delete(query=analyze_result["query"])
+                            index.insert(dict(query=analyze_result["query"], result=analyze_result["result"], score=_old_index_score + 1))
+                        else:
+                            msg.info("Do not update old result!")
+                            index.update(dict(query=analyze_result["query"], result=analyze_result["result"], score=_old_index_score + 1), ["query"])
+                             
+                else:
+                    index.insert(dict(query=analyze_result["query"], result=analyze_result["result"], score=1))
+                
+                db.commit()
 
-        try:
-            job_queue.update(analyze_result, ["hash"])
+            else:
+                msg.warn(f"Skipping index creation because query is None.")
+            
+            job_queue.delete(hash=analyze_result["hash"])
             db.commit()
-        except:
+
+        except KeyError as e:
+            msg.warn(f"Skipping index creation because {e} is undefined.")
+        except Exception as e:
+            msg.fatal_error(f"Faild to save index to DB. \nException: {e}")
             db.rollback()
-            sys.exit(1)

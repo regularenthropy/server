@@ -15,8 +15,8 @@ services:
       - POSTGRES_PASSWD=MeaningOfLife
     links:
       - db
-    #volumes:
-      #- ./tmp/mecab:/app/mecab
+    volumes:
+      - ./tmp/mecab:/app/mecab
 
   db:
     restart: always
@@ -41,3 +41,5 @@ services:
     logging:
       # ターミナルを汚しまくるのでログを粛清
       driver: none
+    volumes:
+      - ./tmp/db:/var/lib/postgresql/data

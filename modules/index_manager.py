@@ -25,6 +25,7 @@ import time
 import os
 import sys
 import dataset
+import redis
 
 # Load DB config from env
 msg.info("Loading DB config...")
@@ -44,6 +45,16 @@ msg.dbg(f"DB url: postgresql://{db_user}:[!DB password was hidden for security!]
 # Connect to DB
 msg.info("Connecting to DB...")
 
+
+# Config redis
+try:
+    redis = redis.Redis(host='127.0.0.1', port=6379, db=1)
+except Exception as e:
+    msg.fatal_error(f"Faild to connect Redis! \nexception: {str(e)}")
+else:
+    msg.info("Redis ok!")
+
+
 try:
     db = dataset.connect(db_url)
     reports = db["reports"]
@@ -55,4 +66,21 @@ else:
     msg.info("DB connection is OK !")
     
 while True:
-    time.sleep(10)
+    time.sleep(1)
+    msg.info("Checking index...")
+    index.delete(query=None)
+    index.delete(score=None)
+    
+    for _index in db['index']:
+        
+        # Wait
+        while True:
+            if redis.get("searxng_locked") != None:
+                msg.dbg("Locked!")
+                time.sleep(1)
+            else:
+                #msg.info("Update index!!")
+                break
+        
+        #msg.info(f"index_info query:{_index['query']} resault:{_index['result']}")
+        time.sleep(1)

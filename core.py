@@ -29,7 +29,7 @@ import threading
 aa = Figlet(font="slant")
 welcome_aa = aa.renderText("Frea Search")
 
-print("Frea Search core API Server ver.3.10\n")
+print("Frea Search core API Server ver.3.30\n")
 print(welcome_aa)
 print("\n(c) 2022 nexryai\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details.\n\n")
 
@@ -72,6 +72,9 @@ def start_redis():
 
 def start_job_manager():
     subprocess.call(["python3", "-u", "modules/job_manager.py"])
+
+def start_index_manager():
+    subprocess.call(["python3", "-u", "modules/index_manager.py"])
 
 def start_tor(n):
     subprocess.call(["python3", "-u", "modules/tor.py", str(n)])
@@ -119,5 +122,9 @@ if os.environ['FREA_ACTIVE_MODE'] == "true" :
     msg.info("Starting job manager...")
     job_manager_thread = threading.Thread(target=start_job_manager)
     job_manager_thread.start()
+    
+    msg.info("Starting index manager...")
+    index_manager_thread = threading.Thread(target=start_index_manager)
+    index_manager_thread.start()
 
 search_server_thread.join()

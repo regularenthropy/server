@@ -187,6 +187,11 @@ class search:
             # request to SearXNG
             msg.dbg("send request to SearXNG.")
             cache_used = False
+            
+            # Lock SearXNG
+            redis.set("searxng_locked", 1)
+            redis.expire("searxng_locked", 30)
+
             try:
                 upstream_request = requests.get(f"http://127.0.0.1:8888/search?q={query_encoded}&language={language}&format=json&category_{category}=on&pageno={pageno}")
                 result = upstream_request.json()
@@ -196,6 +201,9 @@ class search:
                 resp.body = json.dumps(result, ensure_ascii=False)
                 msg.fatal_error(f"UPSTREAM_ENGINE_ERROR has occurred! \nexception: {str(e)}")
                 return
+            
+            # Unlock SearXNG after 10 sec
+            redis.expire("searxng_locked", 10)
 
 
         i = len(result["results"]) - 1
