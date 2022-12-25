@@ -19,7 +19,7 @@ async def exec(program: str, args: list[str]) -> None:
         stderr = (await proc.stderr.readline()).decode()
         if stderr:
             log_error = log_error + "\n" + stderr
-            msg.dbg(stderr)
+            msg.error(stderr)
 
         await asyncio.sleep(0.01)
 
@@ -30,4 +30,4 @@ async def exec(program: str, args: list[str]) -> None:
     else:
         msg.fatal_error(f'{program} {" ".join(args)} exited with {proc.returncode}\n\n\033[90m<<<LOG(stderr)>>> {log_error}')
 
-asyncio.run(exec('python3', ['front/webapp.py']))
+asyncio.run(exec('npm', ['run', 'start']))

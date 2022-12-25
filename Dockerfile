@@ -1,4 +1,4 @@
-FROM fedora:latest
+FROM fedora:37
 WORKDIR /app
 
 COPY ./requirements.txt .
@@ -28,13 +28,14 @@ RUN dnf update -y \
  && dnf remove -y python3-devel boost-devel mecab-devel sqlite-devel libpq-devel make automake gcc gcc-c++ \
  && dnf autoremove -y
 
-# Dockerのクソ仕様により動かない
-#COPY --chown=app:app ./blocklists ./blockwords ./core.py ./front ./models ./modules ./searxng /app/
 COPY --chown=app:app . .
+RUN cd ./front/src \
+ && npm i \
+ && echo "API_URL=https://127.0.0.1:8889" > .env.local \
+ && cd /app
 COPY ./etc/ /etc/
 
-RUN cp -rf ./front/searx/* ./searxng/src/searx/ && rm -rf ./front/searx/ \
- && find ./searxng/src/searx/static \( -name '*.html' -o -name '*.css' -o -name '*.js' \
+RUN find ./searxng/src/searx/static \( -name '*.html' -o -name '*.css' -o -name '*.js' \
     -o -name '*.svg' -o -name '*.eot' \) \
     -type f -exec gzip -9 -k {} \+ -exec brotli --best {} \+ \
  && cd ./searxng/src && pip install -e . \
