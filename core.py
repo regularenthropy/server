@@ -24,6 +24,8 @@ import os
 from pyfiglet import Figlet
 import subprocess
 import threading
+import string
+import secrets
 
 
 aa = Figlet(font="slant")
@@ -48,6 +50,10 @@ except KeyError:
 else:
     msg.info("Use Active mode")
     os.environ['FREA_ACTIVE_MODE'] = "true"
+
+# Set system secret key
+chars = string.ascii_uppercase + string.ascii_lowercase + string.digits + "%&$#()"
+os.environ['FREA_SECRET'] = ''.join(secrets.choice(chars) for i in range(20))
 
 
 def start_nginx():

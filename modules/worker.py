@@ -158,11 +158,20 @@ class search:
         query_encoded = encode_query(query)
         msg.dbg(f"query_encoded={query_encoded}")
         
-        cache_key = f"cache.{category}.{query_encoded}.{pageno}.{language}"
-        index_key = f"{category}.{query_encoded}.{pageno}.{language}"
+        cache_key = f"cache,{category},{query_encoded},{pageno},{language}"
+        index_key = f"{category},{query_encoded},{pageno},{language}"
+        
+        try:
+            if params["request_from_system"] == os.environ['FREA_SECRET']:
+                msg.info("Requested from system")
+                request_from_system = True
+            else:
+                request_from_system = False
+        except:
+            request_from_system = False
 
         # Check cache
-        if redis.exists(cache_key):
+        if redis.exists(cache_key) and not request_from_system:
             msg.info("Use cache !")
             cache_used = True
             try:
@@ -186,9 +195,9 @@ class search:
             except Exception as e:
                 msg.fatal_error(f"Exception: {e}")
             
-            if index.count(query=index_key) > 0:
+            if index.count(query=index_key) > 0 and not request_from_system:
                 try:
-                    msg.dbg("Use result in index.")
+                    msg.info("Use result in index.")
                     result_str = index.find_one(query=index_key)["result"]
                     index_score = index.find_one(query=index_key)["score"]
                     result = ast.literal_eval(result_str)
@@ -318,7 +327,7 @@ class search:
                 msg.dbg("cache saved")
 
         # Archive result to DB
-        if os.environ['FREA_ACTIVE_MODE'] == "true" and not cache_used:
+        if os.environ['FREA_ACTIVE_MODE'] == "true" and not cache_used and not request_from_system:
             result_hash = hashlib.md5(str(result).encode()).hexdigest()
             msg.dbg(f"result_hash: {result_hash}")
             try:

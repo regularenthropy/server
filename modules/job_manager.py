@@ -121,7 +121,7 @@ while True:
             break
 
         
-        # ToDo: 既にインデックスに存在する項目を登録する場合、応答しないエンジンが少ない方が優先されどちらも応答しないエンジンの数が同じなら新しい方を優先する。また何回も検索されているならスコアを上げる。
+        # 既にインデックスに存在する項目を登録する場合、新たに検索を行い、応答しないエンジンが少ない方が優先されどちらも応答しないエンジンの数が同じなら新しい方を優先する。また何回も検索されているならスコアを上げる。
         try:
             if analyze_result["query"] != None:
                 msg.info(f"query: {analyze_result['query']}")
@@ -132,15 +132,17 @@ while True:
                         _old_index_result = ast.literal_eval(_old_index["result"])
                         _old_index_score = _old_index["score"]
                         msg.dbg(f"Old result unresponsive_engines: {_old_index_result['unresponsive_engines']} Result unresponsive_engines: {result_dict['unresponsive_engines']}")
-                        if len(_old_index_result["unresponsive_engines"]) > len(result_dict["unresponsive_engines"]) :
+
+                        if len(_old_index_result["unresponsive_engines"]) >= len(result_dict["unresponsive_engines"]) :
                             msg.info("Update old result in the index!")
                             index.delete(query=analyze_result["query"])
                             index.insert(dict(query=analyze_result["query"], result=analyze_result["result"], score=_old_index_score + 1))
                         else:
                             msg.info("Do not update old result in the index!")
                             index.update(dict(query=analyze_result["query"], result=analyze_result["result"], score=_old_index_score + 1), ["query"])
-                             
+
                 else:
+                    msg.info("Add to index")
                     index.insert(dict(query=analyze_result["query"], result=analyze_result["result"], score=1))
                 
                 db.commit()

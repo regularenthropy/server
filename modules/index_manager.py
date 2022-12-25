@@ -26,6 +26,8 @@ import os
 import sys
 import dataset
 import redis
+import requests
+import json
 
 # Load DB config from env
 msg.info("Loading DB config...")
@@ -79,8 +81,20 @@ while True:
                 msg.dbg("Locked!")
                 time.sleep(1)
             else:
-                #msg.info("Update index!!")
+                msg.info("Update index!!")
                 break
         
-        #msg.info(f"index_info query:{_index['query']} resault:{_index['result']}")
+        # msg.dbg(f"index_info query:{_index['query']} resault:{_index['result']}")
+        query = _index['query'].split(',')
+        try:
+            upstream_request = requests.get(f"http://127.0.0.1:8889/search?q={query[1]}&language={query[3]}&category={query[0]}&pageno={query[2]}&request_from_system={os.environ['FREA_SECRET']}")
+            result = upstream_request.json()
+        except IndexError:
+            msg.warn("Found invalid index. Erase.")
+            index.delete(query=_index['query'])
+        except Exception as e:
+            msg.fatal_error(f"ENGINE_ERROR has occurred! \nexception: {str(e)}")
+        else:
+            msg.info(str(result))
+
         time.sleep(1)
