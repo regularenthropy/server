@@ -35,7 +35,15 @@ msg.info("Configuring SearXNG configuration file...")
 
 with open("/etc/searxng/settings.yml", "r+") as f:
   searxng_config = yaml.safe_load(f)
-  searxng_config["outgoing"]["proxies"]["all://"][0] = "socks5h://127.0.0.1:9050"
+  
+  i = 0
+  while True:
+    try:
+        searxng_config["outgoing"]["proxies"]["all://"][i] = os.environ[f'FREA_PROXY_{i}']
+        msg.info(f"Use proxy {i}")
+    except:
+        break
+
   yaml.dump(searxng_config, f)
 
 # Start SearXNG

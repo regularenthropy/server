@@ -9,6 +9,7 @@ services:
       - "127.0.0.1:8080:8080"
     environment:
       - FREA_DEBUG_MODE=false
+      - FREA_PROXY_0=socks5h://127.0.0.1:9050
       - POSTGRES_HOST=db
       - POSTGRES_DB=frea
       - POSTGRES_USER=frea

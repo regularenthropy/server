@@ -82,8 +82,6 @@ def start_job_manager():
 def start_index_manager():
     subprocess.call(["python3", "-u", "modules/index_manager.py"])
 
-def start_tor(n):
-    subprocess.call(["python3", "-u", "modules/tor.py", str(n)])
 
 # Start nginx
 nginx_server_thread = threading.Thread(target=start_nginx)
@@ -105,23 +103,6 @@ searx_server_thread.start()
 redis_server_thread = threading.Thread(target=start_redis)
 redis_server_thread.start()
 
-# Start Tor
-
-'''
-p1, p2 はそれぞれプロキシサーバーとして動く
-e1, e2 はそれぞれTorのエントリーノード（ブリッジ）として動く
-'''
-tor_proxy_p1_thread = threading.Thread(target=start_tor, args=("p1",))
-tor_proxy_p1_thread.start()
-
-tor_proxy_p2_thread = threading.Thread(target=start_tor, args=("p2",))
-tor_proxy_p2_thread.start()
-
-#tor_proxy_e1_thread = threading.Thread(target=start_tor, args=("e1",))
-#tor_proxy_e1_thread.start()
-
-#tor_proxy_e2_thread = threading.Thread(target=start_tor, args=("e2",))
-#tor_proxy_e2_thread.start()
 
 
 if os.environ['FREA_ACTIVE_MODE'] == "true" :

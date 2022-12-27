@@ -5,7 +5,7 @@ COPY ./requirements.txt .
 COPY ./searxng/src/requirements.txt ./searxng/src/
 
 RUN dnf update -y \
- && dnf install -y python3 python3-pip nginx boost mecab-ipadic sqlite libpq redis python3-devel boost-devel mecab-devel sqlite-devel libpq-devel make automake gcc gcc-c++ util-linux tor brotli wget unzip \
+ && dnf install -y python3 python3-pip nginx boost mecab-ipadic sqlite libpq redis python3-devel boost-devel mecab-devel sqlite-devel libpq-devel make automake gcc gcc-c++ util-linux brotli wget unzip \
  && pip3 install --no-cache -r requirements.txt \
  && pip3 install --no-cache -r ./searxng/src/requirements.txt \
 
