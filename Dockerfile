@@ -15,12 +15,6 @@ RUN dnf update -y \
  && chown -R app:app /app \
  && su app -c "python3 -m pygeonlp.api setup /usr/pygeonlp_basedata" \
 
- && mkdir /var/lib/tor_p1 /var/lib/tor_p2 /var/lib/tor_e1 /var/lib/tor_e2 \
- && chown app:app /var/lib/tor_p1 \
- && chown app:app /var/lib/tor_p2 \
- && chown app:app /var/lib/tor_e1 \
- && chown app:app /var/lib/tor_e2 \
-
  && touch /var/run/nginx.pid \
  && chown -R app:app /var/run/nginx.pid \
  && chown -R app:app /var/lib/nginx \
@@ -29,13 +23,9 @@ RUN dnf update -y \
  && dnf autoremove -y
 
 COPY --chown=app:app . .
-RUN cd ./front/src \
- && npm i \
- && echo "API_URL=https://127.0.0.1:8889" > .env.local \
- && cd /app
-COPY ./etc/ /etc/
 
-RUN find ./searxng/src/searx/static \( -name '*.html' -o -name '*.css' -o -name '*.js' \
+RUN cp -r /app/etc/* /etc/ \
+ && find ./searxng/src/searx/static \( -name '*.html' -o -name '*.css' -o -name '*.js' \
     -o -name '*.svg' -o -name '*.eot' \) \
     -type f -exec gzip -9 -k {} \+ -exec brotli --best {} \+ \
  && cd ./searxng/src && pip install -e . \
@@ -44,7 +34,5 @@ RUN find ./searxng/src/searx/static \( -name '*.html' -o -name '*.css' -o -name 
  && rm -rf etc requirements.txt \
  && echo "dicdir = /app/mecab/mecab-ipadic-neologd" > /usr/local/etc/mecabrc \
  && chown app:app /etc/searxng/settings.yml
-
-ENV FREA_DEBUG_MODE=false
 
 CMD ["su", "app", "-c", "python3 -u core.py"]
