@@ -302,7 +302,16 @@ class search:
             result = {"error": "RESULT_ESCAPE_ERROR"}
         
         # Set number_of_results and time_stamp
-        result["number_of_results"] = len(result["results"])
+        if len(result["results"]) == 0 and len(result["unresponsive_engines"]) >= 3:
+            msg.error("Faild to get results from upstream engine")
+            # ToDo
+            # result = {"error": "FAILD_TO_GET_RESULTS"}
+            resp.status = falcon.HTTP_503
+            #resp.body = json.dumps(result, ensure_ascii=False)
+            resp.body = "FAILD_TO_GET_RESULT"
+            return
+        else:
+            result["number_of_results"] = len(result["results"])
 
         # Optimize answer
         try:
@@ -438,4 +447,4 @@ if __name__ != "__main__":
 if __name__ == "__main__":
     msg.dbg("Debug mode!!!!")
     msg.info("Main worker is OK.")
-    uvicorn.run("worker:app", host="0.0.0.0", port=8889, workers=5)
+    uvicorn.run("worker:app", host="0.0.0.0", port=8889, workers=5, log_level="info", limit_concurrency=2, timeout_keep_alive=3)
