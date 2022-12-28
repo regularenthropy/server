@@ -21,6 +21,7 @@ along with Frea Search. If not, see < http://www.gnu.org/licenses/ >.
 from modules import msg
 
 import os
+import sys
 from pyfiglet import Figlet
 import subprocess
 import threading
@@ -45,10 +46,10 @@ except KeyError:
 try:
     use_active_mode = os.environ['POSTGRES_HOST']
 except KeyError:
-    msg.info("POSTGRES_HOST is undefined. Use normal mode")
-    os.environ['FREA_ACTIVE_MODE'] = "false"
+    msg.fatal_error("PostgreSQL is not configured.")
+    sys.exit(1)
 else:
-    msg.info("Use Active mode")
+    msg.info("PostgreSQL is configured.")
     os.environ['FREA_ACTIVE_MODE'] = "true"
 
 # Set system secret key
