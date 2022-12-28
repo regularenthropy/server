@@ -126,7 +126,7 @@ while True:
             if analyze_result["query"] != None:
 
                 if index.count(query=analyze_result['query']) > 0:
-                    msg.info(f"Same query found in index!  Note: This result was maybe generated as a result of a request by index_manager.")
+                    msg.info(f"Same query found in index!")
                     for _old_index in index.find(query=analyze_result['query']):
                         _old_index_result = ast.literal_eval(_old_index["result"])
                         _old_index_score = _old_index["score"]
