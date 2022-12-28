@@ -93,7 +93,7 @@ while True:
             msg.warn("Found invalid index. Erase.")
             index.delete(query=_index['query'])
         except Exception as e:
-            msg.fatal_error(f"ENGINE_ERROR has occurred! \nexception: {str(e)}")
+            msg.fatal_error(f"Faild to update index! \nexception: {str(e)}")
         else:
             msg.dbg(str(result))
 
