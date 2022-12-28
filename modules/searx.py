@@ -45,7 +45,10 @@ with open("/etc/searxng/settings.yml", "r+") as f:
         # Do not use proxy
         if i == 0:
             msg.warn("Do not use proxy")
-            del searxng_config["outgoing"]["proxies"]
+            try:
+                del searxng_config["outgoing"]["proxies"]
+            except:
+                pass
 
         del i
         break
