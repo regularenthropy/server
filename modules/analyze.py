@@ -23,7 +23,6 @@ def Predict(text, model, vector):
 def chk_text(Text):
     MeCabArg = '-Owakati -D /app/mecab/mecab-ipadic-neologd'
     ModelPath = "/app/models/MODEL_2022-12-10-01-28-30.pkl"
-    #Text = "ワクチンは危険です"
 
     # Model Load
     modelfile = pickle.load(open(ModelPath, "rb"))
