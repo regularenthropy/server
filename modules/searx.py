@@ -42,8 +42,14 @@ with open("/etc/searxng/settings.yml", "r+") as f:
         searxng_config["outgoing"]["proxies"]["all://"][i] = os.environ[f'FREA_PROXY_{i}']
         msg.info(f"Use proxy {i} ({os.environ[f'FREA_PROXY_{i}']})")
     except:
+        # Do not use proxy
+        if i == 0:
+            msg.warn("Do not use proxy")
+            del searxng_config["outgoing"]["proxies"]
+
         del i
         break
+
     else:
         i += 1
 

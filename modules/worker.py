@@ -265,16 +265,18 @@ class search:
             try:
                 if result["answers"][0] != None:
                     result["answers"][0] = {'type': 'answer', 'answer': result["answers"][0]}
-            except Exception as e:
+            except:
                 msg.dbg("No origin answer")
 
             if inteli_e_result[0] != None:
+                result_answer_lock = True
                 msg.dbg("Overwrite answers[0] by inteli_e_result !")
                 try:
                     result["answers"].insert(0, inteli_e_result[0])
                 except Exception as e:
                     msg.error(f"Exception: {e}")
             else:
+                result_answer_lock = False
                 msg.dbg("No info from inteli_e")
 
         # Anti XSS
@@ -318,6 +320,15 @@ class search:
             del result["answers"][1:]
         except:
             pass
+        
+        # Infobox to answer
+        if len(result["answers"]) == 0:
+            try:
+                answer_by_infobox = {'type': 'answer', 'answer': result["infoboxes"][0]["content"]}
+                result["answers"].insert(0, answer_by_infobox)
+            except Exception as e:
+                msg.warn(f"Exception: {e}")
+                pass
 
         # Optimize infobox
         try:
