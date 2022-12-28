@@ -73,26 +73,7 @@
   "infoboxes": [
     {
       "infobox": "ラクスマン",
-      "id": "https://www.wikidata.org/entity/Q42443988",
-      "content": "インドにおける男性の名前 (लक्ष्मण)",
-      "img_src": null,
-      "urls": [
-        {
-          "title": "Wikidata",
-          "url": "http://www.wikidata.org/entity/Q42443988"
-        }
-      ],
-      "attributes": [
-        {
-          "label": "文字体系",
-          "value": "デーヴァナーガリー",
-          "entity": "P282"
-        }
-      ],
-      "engine": "wikidata",
-      "engines": [
-        "wikidata"
-      ]
+      "content": "インドにおける男性の名前 (लक्ष्मण)"
     }
   ],
   "suggestions": [
