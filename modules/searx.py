@@ -42,12 +42,17 @@ with open("/etc/searxng/settings.yml", "r+") as f:
         searxng_config["outgoing"]["proxies"]["all://"][i] = os.environ[f'FREA_PROXY_{i}']
         msg.info(f"Use proxy {i} ({os.environ[f'FREA_PROXY_{i}']})")
     except:
+        del i
         break
     else:
         i += 1
 
   yaml.dump(searxng_config, f)
 
+
 # Start SearXNG
 os.chdir('searxng/src')
+del searxng_config
+del yaml
+
 asyncio.run(exec('python3', ['searx/webapp.py']))

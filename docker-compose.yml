@@ -25,7 +25,7 @@ services:
       - "127.0.0.1:8000:3000"
     environment:
       - NEXT_TELEMETRY_DISABLED=1
-      - API_URL=http://frea
+      - API_URL=https://api.freasearch.org
 
   db:
     restart: always
