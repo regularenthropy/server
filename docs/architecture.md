@@ -1,21 +1,26 @@
 # Frea Search のアーキテクチャ
 
-## スクレイピングサーバー (SearXNG)
-アップストリームエンジンから結果を取得します。中身はSearXNGですが設定を変えて最適化しています。
+## Search API
+検索API
 
-## コアAPIサーバー
-repo: [Gitlab](https://git.freasearch.org/core/api)  [mirror](https://github.com/frea-search/api-server)  
-検索APIを提供するサーバーです。スクレイピングサーバーから取得した情報を加工し、よりエレガントな結果にします。  
-結果の最適化アルゴリズムである`Innocence Force`はここに実装されています。また天気情報スニペットに使用する情報もここで取得、加工します。
-Pythonで書かれており将来的にはAIをしようしてサイトを評価する機能などもここに実装予定です。  
-一般公開されているAPIのエンドポイントでもあります。
+### `core.py`
+各モジュールを呼び出す中枢システムです。各モジュールは別プロセスで並列で動作します。
 
-## Legacy UI
-repo: [Gitlab](https://git.freasearch.org/core/search)  [mirror](https://github.com/frea-search/ui-legacy)  
-新しいUIが完成するまでのつなぎのフロントエンドで、SearXNGベースの従来の Frea Search を加工して作られました。
+### `worker.py`
+検索を実行し、リクエストに応答します。`inteli_e.py`をロードし強調スニペットの処理も行います。
 
-## Frea Worker + Sea
-Ablaze内で開発が進められている次世代のフロントエンドです。Workerは強調スニペット関係の処理を行います。  
-これは近い将来、Legacy UIを置き換える予定です。
+### `analyze.py`
+結果をAIで解析します。
 
+### `index_manager.py`, `job_manager.py`
+インデックスを管理します。
+
+### `searx.py`
+SearXNGの設定の管理、呼び出しを担当します。
+
+### `nginx.py`, `redis.py`
+それぞれnginxとredisを起動します。
+
+## Sea UI
+公式のフロントエンドです。
 

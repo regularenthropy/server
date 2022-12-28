@@ -12,7 +12,6 @@ nav:
     - Setup: setup.md
   - API:
     - overview: api/api.md
-    - general: api/general.md
   - Architecture:
     - overview: architecture.md
   - Workflow:

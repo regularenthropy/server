@@ -27,7 +27,7 @@ import sys
 import ast
 import dataset
 
-analyzer_version = 102
+analyzer_version = 103
 
 # Load DB config from env
 msg.info("Loading DB config...")
@@ -51,6 +51,7 @@ try:
     db = dataset.connect(db_url)
     job_queue = db["queue"]
     reports = db["reports"]
+    index = db["index"]
 except Exception as e:
     msg.fatal_error(f"Faild to connect DB! \nexception: {str(e)}")
     sys.exit(1)
@@ -65,14 +66,24 @@ except Exception as e:
     db.rollback()
     sys.exit(1)
 
+
+if not os.path.exists("/app/mecab/dic_installed"):
+    msg.info("Download MeCab dictionary for analyze")
+    _mecab_dic_dl_result = os.system("bash /app/modules/download_dic.sh")
+    if _mecab_dic_dl_result != 0:
+        msg.fatal_error(f"Faild to download MeCab dictionary! \nExit code: {str(_mecab_dic_dl_result)}")
+
 while True:
     time.sleep(10)
     msg.dbg("Check job queue...")
     job_queue.delete(hash="TEST")
+    job_queue.delete(query=None)
+    job_queue.delete(score=None)
 
     for analyze_result in db['queue']:
+        msg.dbg("Loading result from job queue...")
         result_dict = ast.literal_eval(analyze_result["result"])
-
+        
         if analyze_result["analyzed"] < analyzer_version :
             for chk_result in result_dict["results"]:
 
@@ -83,8 +94,9 @@ while True:
                 except KeyError:
                     _chk_content = None
 
+                msg.dbg(f"Check result...url: {_chk_url}  title: {_chk_title}")
                 if analyze.chk_text(_chk_title) == 1:
-                    msg.info(f"Suspicious site detected! url: {_chk_url}  title: {_chk_title}")
+                    msg.dbg(f"Suspicious site detected! url: {_chk_url}  title: {_chk_title}")
                     try:
                         reports.insert(dict(url=_chk_url, text=_chk_title, reason="title", analyzer_version=analyzer_version))
                         db.commit()
@@ -94,7 +106,7 @@ while True:
 
                 if _chk_content != None:
                     if analyze.chk_text(_chk_content) == 1:
-                        msg.info(f"Suspicious site detected! url: {_chk_url}  content:{_chk_content}")
+                        msg.dbg(f"Suspicious site detected! url: {_chk_url}  content:{_chk_content}")
                         try:
                             reports.insert(dict(url=_chk_url, text=_chk_content, reason="content", analyzer_version=analyzer_version))
                             db.commit()
@@ -103,12 +115,45 @@ while True:
                             db.rollback()
 
                 time.sleep(0.1)
+        
+        if len(result_dict["unresponsive_engines"]) >= 4:
+            job_queue.delete(hash=analyze_result["hash"])
+            break
 
-        analyze_result["analyzed"] = analyzer_version
-
+        
+        # 既にインデックスに存在する項目を登録する場合、新たに検索を行い、応答しないエンジンが少ない方が優先されどちらも応答しないエンジンの数が同じなら新しい方を優先する。また何回も検索されているならスコアを上げる。
         try:
-            job_queue.update(analyze_result, ["hash"])
+            if analyze_result["query"] != None:
+
+                if index.count(query=analyze_result['query']) > 0:
+                    msg.info(f"Same query found in index!")
+                    for _old_index in index.find(query=analyze_result['query']):
+                        _old_index_result = ast.literal_eval(_old_index["result"])
+                        _old_index_score = _old_index["score"]
+                        msg.dbg(f"Old result unresponsive_engines: {_old_index_result['unresponsive_engines']} Result unresponsive_engines: {result_dict['unresponsive_engines']}")
+
+                        if len(_old_index_result["unresponsive_engines"]) >= len(result_dict["unresponsive_engines"]) :
+                            msg.info(f"Update old result in the index! ({analyze_result['query']})")
+                            index.delete(query=analyze_result["query"])
+                            index.insert(dict(query=analyze_result["query"], result=analyze_result["result"], score=_old_index_score + 1))
+                        else:
+                            msg.info(f"Do not update old result in the index! ({analyze_result['query']})")
+                            index.update(dict(query=analyze_result["query"], result=analyze_result["result"], score=_old_index_score + 1), ["query"])
+
+                else:
+                    msg.info("Add to index")
+                    index.insert(dict(query=analyze_result["query"], result=analyze_result["result"], score=1))
+                
+                db.commit()
+
+            else:
+                msg.warn(f"Skipping index creation because query is None.")
+            
+            job_queue.delete(hash=analyze_result["hash"])
             db.commit()
-        except:
+
+        except KeyError as e:
+            msg.warn(f"Skipping index creation because {e} is undefined.")
+        except Exception as e:
+            msg.fatal_error(f"Faild to save index to DB. \nException: {e}")
             db.rollback()
-            sys.exit(1)

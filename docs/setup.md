@@ -2,41 +2,56 @@
 Frea search をセルフホストする方法について説明します。  
 セルフホストインスタンスはプライバシー、速度の点で他人のインスタンスを使用するより優れています。
 
-
-### step1
-適当なディレクトリへ移動し、以下のファイルを作成します。
-
-#### docker-compose.yml
+## APIサーバー
+### docker-compose.yml
 ```
-version: '3'
-
-services:
 version: '3.7'
 
 services:
-  db:
-    container_name: db
-    image: "redis:alpine"
-    command: redis-server --save "" --appendonly "no"
-    tmpfs:
-      - /var/lib/redis
-    cap_drop:
-      - ALL
-    cap_add:
-      - SETGID
-      - SETUID
-      - DAC_OVERRIDE
-
-  frea-api:
-    image: "nexryai/frea-api:latest"
+  frea:
+    image: nexryai/frea-api:latest
     restart: always
     ports:
-      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:8000:8000"
+    environment:
+      - FREA_DEBUG_MODE=false
+      # プロキシを使う際はここに記述
+      # - FREA_PROXY_0=socks5h://127.0.0.1:9050
+      # - FREA_PROXY_1=socks5h://127.0.0.1:9050
+      # ...
+      - POSTGRES_HOST=db
+      - POSTGRES_DB=frea
+      - POSTGRES_USER=frea
+      - POSTGRES_PASSWD=CHANGEME
+    links:
+      - db
+    volumes:
+      - ./mecab:/app/mecab
+
+  db:
+    restart: always
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=frea
+      - POSTGRES_USER=frea
+      - POSTGRES_PASSWORD=CHANGEME
+    volumes:
+      - ./db:/var/lib/postgresql/data
 ```
 
-### step2
-実行します。  
-`docker-compose up`
+## UIサーバー
 
-### step3
-適当なhttpサーバーをシステムにインストールし、`localhost:8080`へリバースプロキシするように設定します。https化するのを忘れないでください。
+### docker-compose.yml
+```
+version: '3.7'
+
+services:  
+  ui:
+    image: nexryai/frea-ui:latest
+    restart: always
+    ports:
+      - "127.0.0.1:3002:3000"
+    environment:
+      - NEXT_TELEMETRY_DISABLED=1
+      - API_URL=[APIサーバーのURL（公式は https://api.freasearch.org）]
+```

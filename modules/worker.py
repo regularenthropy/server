@@ -25,6 +25,7 @@ import uvicorn
 import os
 import sys
 import requests
+import logging
 import json
 import ast
 import yaml
@@ -140,6 +141,13 @@ class search:
         except:
             msg.dbg("Use default value (pageno)")
             pageno = 1
+        else:
+            if int(pageno) > 4 :
+                msg.warn("Request dropped (Reason: Pageno's number is too large)")
+                result = {"error": "TOO_LARGE_PAGENO"}
+                resp.status = falcon.HTTP_400
+                resp.body = json.dumps(result, ensure_ascii=False)
+                return
 
         try:
             category = params["category"]
@@ -158,10 +166,20 @@ class search:
         query_encoded = encode_query(query)
         msg.dbg(f"query_encoded={query_encoded}")
         
-        cache_key = f"cache.{category}.{query_encoded}.{pageno}.{language}"
+        cache_key = f"cache,{category},{query_encoded},{pageno},{language}"
+        index_key = f"{category},{query_encoded},{pageno},{language}"
+        
+        try:
+            if params["request_from_system"] == os.environ['FREA_SECRET']:
+                msg.info("Requested from system")
+                request_from_system = True
+            else:
+                request_from_system = False
+        except:
+            request_from_system = False
 
         # Check cache
-        if redis.exists(cache_key):
+        if redis.exists(cache_key) and not request_from_system:
             msg.info("Use cache !")
             cache_used = True
             try:
@@ -176,6 +194,7 @@ class search:
         else:
             # Search without cache
             msg.dbg("Load intelligence-engine")
+            cache_used = False
 
             try:
                 inteli_e_result = []
@@ -184,18 +203,38 @@ class search:
             except Exception as e:
                 msg.fatal_error(f"Exception: {e}")
             
-            # request to SearXNG
-            msg.dbg("send request to SearXNG.")
-            cache_used = False
-            try:
-                upstream_request = requests.get(f"http://127.0.0.1:8888/search?q={query_encoded}&language={language}&format=json&category_{category}=on&pageno={pageno}")
-                result = upstream_request.json()
-            except Exception as e:
-                result = {"error": "UPSTREAM_ENGINE_ERROR"}
-                resp.status = falcon.HTTP_500
-                resp.body = json.dumps(result, ensure_ascii=False)
-                msg.fatal_error(f"UPSTREAM_ENGINE_ERROR has occurred! \nexception: {str(e)}")
-                return
+            if index.count(query=index_key) > 0 and not request_from_system:
+                try:
+                    msg.info("Use result in index.")
+                    result_str = index.find_one(query=index_key)["result"]
+                    index_score = index.find_one(query=index_key)["score"]
+                    result = ast.literal_eval(result_str)
+                except Exception as e:
+                    result = {"error": "INDEX_ERROR"}
+                    resp.status = falcon.HTTP_500
+                    resp.body = json.dumps(result, ensure_ascii=False)
+                    msg.fatal_error(f"INDEX_ERROR has occurred! \nexception: {str(e)}")
+                    return
+            else:
+                # request to SearXNG
+                msg.dbg("send request to SearXNG.")
+            
+                # Lock SearXNG
+                redis.set("searxng_locked", 1)
+                redis.expire("searxng_locked", 30)
+
+                try:
+                    upstream_request = requests.get(f"http://127.0.0.1:8888/search?q={query_encoded}&language={language}&format=json&category_{category}=on&pageno={pageno}")
+                    result = upstream_request.json()
+                except Exception as e:
+                    result = {"error": "UPSTREAM_ENGINE_ERROR"}
+                    resp.status = falcon.HTTP_500
+                    resp.body = json.dumps(result, ensure_ascii=False)
+                    msg.fatal_error(f"UPSTREAM_ENGINE_ERROR has occurred! \nexception: {str(e)}")
+                    return
+            
+                # Unlock SearXNG after 10 sec
+                redis.expire("searxng_locked", 10)
 
 
         i = len(result["results"]) - 1
@@ -226,16 +265,18 @@ class search:
             try:
                 if result["answers"][0] != None:
                     result["answers"][0] = {'type': 'answer', 'answer': result["answers"][0]}
-            except Exception as e:
+            except:
                 msg.dbg("No origin answer")
 
             if inteli_e_result[0] != None:
+                result_answer_lock = True
                 msg.dbg("Overwrite answers[0] by inteli_e_result !")
                 try:
                     result["answers"].insert(0, inteli_e_result[0])
                 except Exception as e:
                     msg.error(f"Exception: {e}")
             else:
+                result_answer_lock = False
                 msg.dbg("No info from inteli_e")
 
         # Anti XSS
@@ -263,13 +304,31 @@ class search:
             result = {"error": "RESULT_ESCAPE_ERROR"}
         
         # Set number_of_results and time_stamp
-        result["number_of_results"] = len(result["results"])
-        
+        if len(result["results"]) == 0 and len(result["unresponsive_engines"]) >= 3:
+            msg.error("Faild to get results from upstream engine")
+            # ToDo
+            # result = {"error": "FAILD_TO_GET_RESULTS"}
+            resp.status = falcon.HTTP_503
+            #resp.body = json.dumps(result, ensure_ascii=False)
+            resp.body = "FAILD_TO_GET_RESULT"
+            return
+        else:
+            result["number_of_results"] = len(result["results"])
+
         # Optimize answer
         try:
             del result["answers"][1:]
         except:
             pass
+        
+        # Infobox to answer
+        if len(result["answers"]) == 0:
+            try:
+                answer_by_infobox = {'type': 'answer', 'answer': result["infoboxes"][0]["content"]}
+                result["answers"].insert(0, answer_by_infobox)
+            except Exception as e:
+                msg.warn(f"Exception: {e}")
+                pass
 
         # Optimize infobox
         try:
@@ -297,11 +356,10 @@ class search:
 
         # Archive result to DB
         if os.environ['FREA_ACTIVE_MODE'] == "true" and not cache_used :
-            del result["query"]
             result_hash = hashlib.md5(str(result).encode()).hexdigest()
             msg.dbg(f"result_hash: {result_hash}")
             try:
-                job_queue.insert(dict(hash=result_hash, result=str(result), archived=False, analyzed=0))
+                job_queue.insert(dict(hash=result_hash, result=str(result), archived=False, analyzed=0, query=index_key))
                 db.commit()
             except Exception as e:
                 db.rollback()
@@ -389,6 +447,7 @@ if __name__ != "__main__":
         try:
             db = dataset.connect(f"postgresql://{db_user}:{db_passwd}@{db_host}/{db_name}")
             job_queue = db["queue"]
+            index = db["index"]
         except Exception as e:
             msg.fatal_error(f"Faild to connect DB! \nexception: {str(e)}")
             sys.exit(1)
@@ -398,4 +457,5 @@ if __name__ != "__main__":
 
 if __name__ == "__main__":
     msg.dbg("Debug mode!!!!")
-    uvicorn.run("worker:app", host="0.0.0.0", port=8889, workers=5, log_level="info")
+    msg.info("Main worker is OK.")
+    uvicorn.run("worker:app", host="0.0.0.0", port=8889, workers=5, log_level="info", limit_concurrency=2, timeout_keep_alive=3)

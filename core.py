@@ -21,15 +21,18 @@ along with Frea Search. If not, see < http://www.gnu.org/licenses/ >.
 from modules import msg
 
 import os
+import sys
 from pyfiglet import Figlet
 import subprocess
 import threading
+import string
+import secrets
 
 
 aa = Figlet(font="slant")
 welcome_aa = aa.renderText("Frea Search")
 
-print("Frea Search core API Server ver.3.10\n")
+print("Frea Search API Server ver.4.00 (codename: Crystal Rain)\n")
 print(welcome_aa)
 print("\n(c) 2022 nexryai\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details.\n\n")
 
@@ -43,11 +46,16 @@ except KeyError:
 try:
     use_active_mode = os.environ['POSTGRES_HOST']
 except KeyError:
-    msg.info("POSTGRES_HOST is undefined. Use normal mode")
-    os.environ['FREA_ACTIVE_MODE'] = "false"
+    msg.fatal_error("PostgreSQL is not configured.")
+    sys.exit(1)
 else:
-    msg.info("Use Active mode")
+    msg.info("PostgreSQL is configured.")
     os.environ['FREA_ACTIVE_MODE'] = "true"
+
+# Set system secret key
+msg.info("Generate a secret key...")
+chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
+os.environ['FREA_SECRET'] = ''.join(secrets.choice(chars) for i in range(20))
 
 
 def start_nginx():
@@ -57,10 +65,6 @@ def start_nginx():
 def start_search_api_server():
     msg.info("Starting search API server workers....")
     subprocess.call(["python3", "-u", "modules/worker.py"])
-
-def start_front():
-    msg.info("Starting UI....")
-    subprocess.call(["python3", "-u", "modules/start_ui.py"])
 
 def start_searxng():
     msg.info("Starting SearXNG....")
@@ -73,8 +77,9 @@ def start_redis():
 def start_job_manager():
     subprocess.call(["python3", "-u", "modules/job_manager.py"])
 
-def start_tor(n):
-    subprocess.call(["python3", "-u", "modules/tor.py", str(n)])
+def start_index_manager():
+    subprocess.call(["python3", "-u", "modules/index_manager.py"])
+
 
 # Start nginx
 nginx_server_thread = threading.Thread(target=start_nginx)
@@ -84,10 +89,6 @@ nginx_server_thread.start()
 search_server_thread = threading.Thread(target=start_search_api_server)
 search_server_thread.start()
 
-# Start UI
-front_server_thread = threading.Thread(target=start_front)
-front_server_thread.start()
-
 # Start searx
 searx_server_thread = threading.Thread(target=start_searxng)
 searx_server_thread.start()
@@ -96,28 +97,15 @@ searx_server_thread.start()
 redis_server_thread = threading.Thread(target=start_redis)
 redis_server_thread.start()
 
-# Start Tor
-
-'''
-p1, p2 はそれぞれプロキシサーバーとして動く
-e1, e2 はそれぞれTorのエントリーノード（ブリッジ）として動く
-'''
-tor_proxy_p1_thread = threading.Thread(target=start_tor, args=("p1",))
-tor_proxy_p1_thread.start()
-
-tor_proxy_p2_thread = threading.Thread(target=start_tor, args=("p2",))
-tor_proxy_p2_thread.start()
-
-#tor_proxy_e1_thread = threading.Thread(target=start_tor, args=("e1",))
-#tor_proxy_e1_thread.start()
-
-#tor_proxy_e2_thread = threading.Thread(target=start_tor, args=("e2",))
-#tor_proxy_e2_thread.start()
 
 
 if os.environ['FREA_ACTIVE_MODE'] == "true" :
     msg.info("Starting job manager...")
     job_manager_thread = threading.Thread(target=start_job_manager)
     job_manager_thread.start()
+    
+    msg.info("Starting index manager...")
+    index_manager_thread = threading.Thread(target=start_index_manager)
+    index_manager_thread.start()
 
 search_server_thread.join()
