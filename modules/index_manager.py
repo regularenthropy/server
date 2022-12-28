@@ -95,6 +95,6 @@ while True:
         except Exception as e:
             msg.fatal_error(f"ENGINE_ERROR has occurred! \nexception: {str(e)}")
         else:
-            msg.info(str(result))
+            msg.dbg(str(result))
 
         time.sleep(1)

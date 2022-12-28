@@ -96,7 +96,7 @@ while True:
 
                 msg.dbg(f"Check result...url: {_chk_url}  title: {_chk_title}")
                 if analyze.chk_text(_chk_title) == 1:
-                    msg.info(f"Suspicious site detected! url: {_chk_url}  title: {_chk_title}")
+                    msg.dbg(f"Suspicious site detected! url: {_chk_url}  title: {_chk_title}")
                     try:
                         reports.insert(dict(url=_chk_url, text=_chk_title, reason="title", analyzer_version=analyzer_version))
                         db.commit()
@@ -106,7 +106,7 @@ while True:
 
                 if _chk_content != None:
                     if analyze.chk_text(_chk_content) == 1:
-                        msg.info(f"Suspicious site detected! url: {_chk_url}  content:{_chk_content}")
+                        msg.dbg(f"Suspicious site detected! url: {_chk_url}  content:{_chk_content}")
                         try:
                             reports.insert(dict(url=_chk_url, text=_chk_content, reason="content", analyzer_version=analyzer_version))
                             db.commit()
@@ -124,21 +124,20 @@ while True:
         # 既にインデックスに存在する項目を登録する場合、新たに検索を行い、応答しないエンジンが少ない方が優先されどちらも応答しないエンジンの数が同じなら新しい方を優先する。また何回も検索されているならスコアを上げる。
         try:
             if analyze_result["query"] != None:
-                msg.info(f"query: {analyze_result['query']}")
 
                 if index.count(query=analyze_result['query']) > 0:
-                    msg.warn(f"Same query found in index! {index.count(query=analyze_result['query'])}")
+                    msg.info(f"Same query found in index!  Note: This result was maybe generated as a result of a request by index_manager.")
                     for _old_index in index.find(query=analyze_result['query']):
                         _old_index_result = ast.literal_eval(_old_index["result"])
                         _old_index_score = _old_index["score"]
                         msg.dbg(f"Old result unresponsive_engines: {_old_index_result['unresponsive_engines']} Result unresponsive_engines: {result_dict['unresponsive_engines']}")
 
                         if len(_old_index_result["unresponsive_engines"]) >= len(result_dict["unresponsive_engines"]) :
-                            msg.info("Update old result in the index!")
+                            msg.info(f"Update old result in the index! ({analyze_result['query']})")
                             index.delete(query=analyze_result["query"])
                             index.insert(dict(query=analyze_result["query"], result=analyze_result["result"], score=_old_index_score + 1))
                         else:
-                            msg.info("Do not update old result in the index!")
+                            msg.info(f"Do not update old result in the index! ({analyze_result['query']})")
                             index.update(dict(query=analyze_result["query"], result=analyze_result["result"], score=_old_index_score + 1), ["query"])
 
                 else:

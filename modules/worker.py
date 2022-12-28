@@ -355,7 +355,7 @@ class search:
                 msg.dbg("cache saved")
 
         # Archive result to DB
-        if os.environ['FREA_ACTIVE_MODE'] == "true" and not cache_used and not request_from_system:
+        if os.environ['FREA_ACTIVE_MODE'] == "true" and not cache_used :
             result_hash = hashlib.md5(str(result).encode()).hexdigest()
             msg.dbg(f"result_hash: {result_hash}")
             try:
