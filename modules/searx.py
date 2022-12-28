@@ -53,6 +53,5 @@ with open("/etc/searxng/settings.yml", "r+") as f:
 # Start SearXNG
 os.chdir('searxng/src')
 del searxng_config
-del yaml
 
 asyncio.run(exec('python3', ['searx/webapp.py']))

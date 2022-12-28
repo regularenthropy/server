@@ -25,6 +25,7 @@ import uvicorn
 import os
 import sys
 import requests
+import logging
 import json
 import ast
 import yaml
@@ -140,6 +141,13 @@ class search:
         except:
             msg.dbg("Use default value (pageno)")
             pageno = 1
+        else:
+            if int(pageno) > 4 :
+                msg.warn("Request dropped (Reason: Pageno's number is too large)")
+                result = {"error": "TOO_LARGE_PAGENO"}
+                resp.status = falcon.HTTP_400
+                resp.body = json.dumps(result, ensure_ascii=False)
+                return
 
         try:
             category = params["category"]
@@ -429,4 +437,5 @@ if __name__ != "__main__":
 
 if __name__ == "__main__":
     msg.dbg("Debug mode!!!!")
-    uvicorn.run("worker:app", host="0.0.0.0", port=8889, workers=5, log_level="info")
+    msg.info("Main worker is OK.")
+    uvicorn.run("worker:app", host="0.0.0.0", port=8889, workers=5)
