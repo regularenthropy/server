@@ -182,6 +182,7 @@ class search:
         if redis.exists(cache_key) and not request_from_system:
             msg.info("Use cache !")
             cache_used = True
+            archive_used = False
             try:
                 cache_str = redis.get(cache_key).decode("UTF-8")
                 result = ast.literal_eval(cache_str)
@@ -206,6 +207,7 @@ class search:
             if index.count(query=index_key) > 0 and not request_from_system:
                 try:
                     msg.info("Use result in index.")
+                    archive_used = True
                     result_str = index.find_one(query=index_key)["result"]
                     index_score = index.find_one(query=index_key)["score"]
                     result = ast.literal_eval(result_str)
@@ -216,6 +218,8 @@ class search:
                     msg.fatal_error(f"INDEX_ERROR has occurred! \nexception: {str(e)}")
                     return
             else:
+                archive_used = False
+
                 # request to SearXNG
                 msg.dbg("send request to SearXNG.")
             
@@ -262,11 +266,12 @@ class search:
             except Exception as e:
                 msg.error(f"Exception: {e}")
         
-            try:
-                if result["answers"][0] != None:
-                    result["answers"][0] = {'type': 'answer', 'answer': result["answers"][0]}
-            except:
-                msg.dbg("No origin answer")
+            if not archive_used:
+                try:
+                    if result["answers"][0] != None:
+                        result["answers"][0] = {'type': 'answer', 'answer': result["answers"][0]}
+                except:
+                    msg.dbg("No origin answer")
 
             if inteli_e_result[0] != None:
                 result_answer_lock = True
