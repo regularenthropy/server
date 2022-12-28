@@ -40,9 +40,11 @@ with open("/etc/searxng/settings.yml", "r+") as f:
   while True:
     try:
         searxng_config["outgoing"]["proxies"]["all://"][i] = os.environ[f'FREA_PROXY_{i}']
-        msg.info(f"Use proxy {i}")
+        msg.info(f"Use proxy {i} ({os.environ[f'FREA_PROXY_{i}']})")
     except:
         break
+    else:
+        i += 1
 
   yaml.dump(searxng_config, f)
 

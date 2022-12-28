@@ -31,7 +31,7 @@ import secrets
 aa = Figlet(font="slant")
 welcome_aa = aa.renderText("Frea Search")
 
-print("Frea Search core API Server ver.3.30\n")
+print("Frea Search API Server ver.4.00 (codename: Crystal Rain)\n")
 print(welcome_aa)
 print("\n(c) 2022 nexryai\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details.\n\n")
 
@@ -52,6 +52,7 @@ else:
     os.environ['FREA_ACTIVE_MODE'] = "true"
 
 # Set system secret key
+msg.info("Generate a secret key...")
 chars = string.ascii_uppercase + string.ascii_lowercase + string.digits + "%&$#()"
 os.environ['FREA_SECRET'] = ''.join(secrets.choice(chars) for i in range(20))
 
@@ -63,10 +64,6 @@ def start_nginx():
 def start_search_api_server():
     msg.info("Starting search API server workers....")
     subprocess.call(["python3", "-u", "modules/worker.py"])
-
-def start_front():
-    msg.info("Starting UI....")
-    subprocess.call(["python3", "-u", "modules/start_ui.py"])
 
 def start_searxng():
     msg.info("Starting SearXNG....")
@@ -90,10 +87,6 @@ nginx_server_thread.start()
 # Start API server
 search_server_thread = threading.Thread(target=start_search_api_server)
 search_server_thread.start()
-
-# Start UI
-front_server_thread = threading.Thread(target=start_front)
-front_server_thread.start()
 
 # Start searx
 searx_server_thread = threading.Thread(target=start_searxng)
