@@ -53,7 +53,7 @@ else:
 
 # Set system secret key
 msg.info("Generate a secret key...")
-chars = string.ascii_uppercase + string.ascii_lowercase + string.digits + "%&$#()"
+chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
 os.environ['FREA_SECRET'] = ''.join(secrets.choice(chars) for i in range(20))
 
 
