@@ -41,6 +41,7 @@ import time
 
 import msg
 import inteli_e
+import lang
 
 
 encode_query = urllib.parse.quote
@@ -253,8 +254,17 @@ class search:
                 del result["results"][i]
             else:
                 msg.dbg(f"Do not kill result[{i}]")
+            
+            #言語最適化
+            try:
+                if language == "ja-JP" and lang.chk(query) != "zh":
+                    if lang.chk(result["results"][i]["content"]) == "zh":
+                        del result["results"][i]
+            except KeyError as e:
+                msg.warn(e)
 
             i -= 1
+
 
         if not cache_used:
             msg.dbg("Wait for inteli_e")
