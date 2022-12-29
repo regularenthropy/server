@@ -1,3 +1,5 @@
+use_default_settings: false
+
 general:
   debug: false              # Debug mode, only for development
   instance_name: "Frea Search"  # displayed name
@@ -57,7 +59,7 @@ server:
   # If your instance owns a /etc/searxng/settings.yml file, then set the following
   # values there.
 
-  secret_key: "f3191a75a98ddc59270614042a3f4786c79dd40d5398cfc262716d4f5acf3a3f"  # change this!
+  secret_key: "ultrasecretkey"  # change this!
   # Proxying image results through searx
   image_proxy: true
   # 1.0 and 1.1 are supported
@@ -316,6 +318,7 @@ engines:
     shortcut: go
     # see https://docs.searxng.org/src/searx.engines.google.html#module-searx.engines.google
     use_mobile_ui: true
+    language: en
     weigth: 2
     # additional_tests:
     #   android: *test_android
