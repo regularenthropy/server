@@ -5,7 +5,7 @@ COPY ./requirements.txt .
 COPY ./searxng/src/requirements.txt ./searxng/src/
 
 RUN dnf update -y \
- && dnf install -y python3 python3-pip nginx boost mecab-ipadic sqlite libpq redis python3-devel boost-devel mecab-devel sqlite-devel libpq-devel make automake gcc gcc-c++ util-linux brotli wget unzip \
+ && dnf install -y openssl python3 python3-pip nginx boost mecab-ipadic sqlite libpq redis python3-devel boost-devel mecab-devel sqlite-devel libpq-devel make automake gcc gcc-c++ util-linux brotli wget unzip \
  && pip3 install --no-cache -r requirements.txt \
  && pip3 install --no-cache -r ./searxng/src/requirements.txt \
 
@@ -33,6 +33,7 @@ RUN cp -r /app/etc/* /etc/ \
  && cd /app \
  && rm -rf etc requirements.txt \
  && echo "dicdir = /app/mecab/mecab-ipadic-neologd" > /usr/local/etc/mecabrc \
- && chown app:app /etc/searxng/settings.yml
+ #&& chown app:app /etc/searxng/settings.yml \
+ && chown app:app -R /etc/searxng
 
 CMD ["su", "app", "-c", "python3 -u core.py"]

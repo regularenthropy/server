@@ -63,4 +63,9 @@ with open("/etc/searxng/settings.yml", "r+") as f:
 os.chdir('searxng/src')
 del searxng_config
 
+
+if os.system('sed -i "s/ultrasecretkey/$(openssl rand -hex 32)/g" /etc/searxng/settings.yml') != 0:
+    msg.fatal_error(f"Failed to generate SearXNG secret.")
+    sys.exit(1)
+
 asyncio.run(exec('python3', ['searx/webapp.py']))
