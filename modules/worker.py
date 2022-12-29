@@ -203,7 +203,7 @@ class search:
                 result = {"error": "CACHE_ERROR"}
                 resp.status = falcon.HTTP_500
                 resp.body = json.dumps(result, ensure_ascii=False)
-                msg.fatal_error(f"CACHE_ERROR has occurred! \nexception: {str(e)}")
+                msg.fatal_error(f"CACHE_ERROR has occurred! Exception: {str(e)}")
                 return
         else:
             # Search without cache
@@ -443,7 +443,8 @@ if __name__ != "__main__":
     try:
         redis = redis.Redis(host='127.0.0.1', port=6379, db=1)
     except Exception as e:
-        msg.fatal_error(f"Faild to connect DB! \nexception: {str(e)}")
+        msg.fatal_error(f"Faild to connect DB! Exception: {str(e)}")
+        sys.exit(1)
     else:
         msg.info("Redis ok!")
 
@@ -457,7 +458,7 @@ if __name__ != "__main__":
             db_user = os.environ['POSTGRES_USER']
             db_passwd = os.environ['POSTGRES_PASSWD']
         except KeyError as e:
-            msg.fatal_error(f"Faild to load DB config! \nundefined environment variable: {str(e)}")
+            msg.fatal_error(f"Faild to load DB config! undefined environment variable: {str(e)}")
             sys.exit(1)
 
         # Connect to DB
@@ -468,7 +469,7 @@ if __name__ != "__main__":
             job_queue = db["queue"]
             index = db["index"]
         except Exception as e:
-            msg.fatal_error(f"Faild to connect DB! \nexception: {str(e)}")
+            msg.fatal_error(f"Faild to connect DB! Exception: {str(e)}")
             sys.exit(1)
         else:
             msg.info("DB connection is OK !")
