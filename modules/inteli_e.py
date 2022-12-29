@@ -196,8 +196,7 @@ def main(query):
 
     if tsunami_info["no_tsunami"] != "true":
         message = "警告: 現在、一部の沿岸地域に" + tsunami_info["grade"] + "が発表されています。"
-        dbglog("Done!")
-        return {'type': 'tsunami_warn', 'message': message, 'tsunami': 'true', 'hide_icon': 'true'}
+        return {'type': 'warning', 'answer': message}
 
     if '遅延' in query:
         dbglog("Check train information....")
@@ -209,12 +208,11 @@ def main(query):
             query_split = query.split()
             train_name = query_split[0]
 
-        result = get_train_info(query)
+        result = get_train_info(train_name)
 
         if result != "NO_DATA":
-            message = "/"" + train_name + "/"が遅延しています。"
-            dbglog("Done!")
-            return {'type': 'train_delay', 'message': message, 'url': result}
+            message = '"' + train_name + '"の運行情報があります。'
+            return {'type': 'answer', 'answer': message, 'url': result}
 
     if '天気' in query:
         dbglog("Check weather info....")
@@ -246,15 +244,15 @@ def main(query):
 
     if 'コロナ' in query:
         w_message = "新型コロナウイルス感染症に関する正しい情報をお求めの場合は、厚生労働省のwebサイトをご確認ください。"
-        #link = "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000164708_00001.html"
+        link = "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000164708_00001.html"
 
     if 'ワクチン' in query:
         w_message = "新型コロナワクチンに関する信頼できる情報をお求めの場合は、公的機関のページが役に立つでしょう。"
-        #link = "https://v-sys.mhlw.go.jp/"
+        link = "https://v-sys.mhlw.go.jp/"
 
     if 'ウクライナ' in query:
         w_message = "ユニセフの緊急募金に参加しウクライナを支援できます。"
-        #link = "https://www.unicef.or.jp/kinkyu/ukraine/"
+        link = "https://www.unicef.or.jp/kinkyu/ukraine/"
     
     if query == 'ping':
         w_message = "pong!"
