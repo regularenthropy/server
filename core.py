@@ -32,7 +32,7 @@ import secrets
 aa = Figlet(font="slant")
 welcome_aa = aa.renderText("Frea Search")
 
-print("Frea Search API Server ver.4.00 (codename: Crystal Rain)\n")
+print("Frea Search API Server ver.4.12 (codename: Crystal Rain)\n")
 print(welcome_aa)
 print("\n(c) 2022 nexryai\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details.\n\n")
 
@@ -51,6 +51,7 @@ except KeyError:
 else:
     msg.info("PostgreSQL is configured.")
     os.environ['FREA_ACTIVE_MODE'] = "true"
+
 
 # Set system secret key
 msg.info("Generate a secret key...")
@@ -80,6 +81,9 @@ def start_job_manager():
 def start_index_manager():
     subprocess.call(["python3", "-u", "modules/index_manager.py"])
 
+def start_news_monitor():
+    subprocess.call(["python3", "-u", "modules/news_monitor.py"])
+
 
 # Start nginx
 nginx_server_thread = threading.Thread(target=start_nginx)
@@ -97,6 +101,9 @@ searx_server_thread.start()
 redis_server_thread = threading.Thread(target=start_redis)
 redis_server_thread.start()
 
+# Start news_monitor
+news_monitor_thread = threading.Thread(target=start_news_monitor)
+news_monitor_thread.start()
 
 
 if os.environ['FREA_ACTIVE_MODE'] == "true" :

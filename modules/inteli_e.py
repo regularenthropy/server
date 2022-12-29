@@ -8,18 +8,22 @@ from zoneinfo import ZoneInfo
 import requests
 import json
 import ast
+import redis
 import urllib
 import pygeonlp.api
 import feedparser
 
 import msg
 
-debug_mode = True
 
-def dbglog(message):
-    if debug_mode:
-        msg.dbg(message)
-
+# Config redis
+try:
+    redis = redis.Redis(host='127.0.0.1', port=6379, db=1)
+except Exception as e:
+    msg.fatal_error(f"Faild to connect Redis! Exception: {str(e)}")
+    sys.exit(1)
+else:
+    msg.info("Redis ok!")
 
 
 def get_weather(query):
@@ -159,39 +163,21 @@ def get_train_info(query):
 
 
 def get_tsunami_info():
-    api_url = 'https://api.p2pquake.net/v2/jma/tsunami?limit=1&offset=0&order=-1'
-
-    # For debug
-    #api_url = 'https://api.p2pquake.net/v2/jma/tsunami?limit=1&offset=8&order=-1'
-
     try:
-        result = requests.get(api_url).json()
+        tsunami_result_str = redis.get("tsunami_status").decode("UTF-8")
+        msg.info(tsunami_result_str)
+        tsunami_result = ast.literal_eval(tsunami_result_str)
     except Exception as e:
-        sys.stdout.write(str(e))
-        response = {'no_tsunami': "true", 'error': "true"}
-    else:
-        if result[0]["cancelled"]:
-            response = {'no_tsunami': "true"}
-        else:
-            grade = result[0]["areas"][0]["grade"]
-            if grade == "Watch":
-                grade_disp = "津波注意報"
-            elif grade == "Warning":
-                grade_disp = "津波警報"
-            elif grade == "MajorWarning":
-                grade_disp = "大津波警報"
-            else:
-                grade_disp = "津波に関する情報"
-
-            response = {'no_tsunami': "false", 'grade': grade_disp}
+        msg.error(f"Faild to get data from redis! Exception: {str(e)}")
+        tsunami_result = {'no_tsunami': "true", 'error': "true"}
     
-    return response
+    return tsunami_result
 
 
 def main(query):
-    dbglog("called inteli_e")
+    msg.dbg("called inteli_e")
 
-    dbglog("Check tsunami_info...")
+    msg.dbg("Check tsunami_info...")
     tsunami_info = get_tsunami_info()
 
     if tsunami_info["no_tsunami"] != "true":
@@ -199,7 +185,7 @@ def main(query):
         return {'type': 'warning', 'answer': message}
 
     if '遅延' in query:
-        dbglog("Check train information....")
+        msg.dbg("Check train information....")
 
         if '　' in query:
             query_split = query.split("　")
@@ -215,14 +201,14 @@ def main(query):
             return {'type': 'answer', 'answer': message, 'url': result}
 
     if '天気' in query:
-        dbglog("Check weather info....")
+        msg.dbg("Check weather info....")
 
         result = get_weather(query)
 
-        dbglog(f"Weather result: {result}")
+        msg.dbg(f"Weather result: {result}")
 
         if result == "NO_DATA":
-            dbglog("Weather result is NO_DATA")
+            msg.dbg("Weather result is NO_DATA")
             return None
 
         message=f"今後の{result['location_name']}の天気は{result['weather']}、現在の気温は{result['temp_now']}℃です。明日（{result['d2_disp']}）は最高気温{result['maxtemp_d2']}℃で{result['weather_d2']}、明後日（{result['d3_disp']}）は最高気温{result['maxtemp_d3']}℃で{result['weather_d2']}になる予想です。"
@@ -268,5 +254,5 @@ def main(query):
         
         return warn_msg
     
-    dbglog("No info!")
+    msg.dbg("No info!")
     return None
