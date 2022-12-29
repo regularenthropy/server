@@ -179,6 +179,18 @@ class search:
         except:
             request_from_system = False
 
+
+        # 強調スニペット関係の処理を呼び出す。
+        msg.dbg("Load intelligence-engine")
+
+        try:
+            inteli_e_result = []
+            inteli_e_thread = Thread(target=run_inteli_e, args=(query, inteli_e_result))
+            inteli_e_thread.start()
+        except Exception as e:
+            msg.fatal_error(f"Exception: {e}")
+
+
         # Check cache
         if redis.exists(cache_key) and not request_from_system:
             msg.info("Use cache !")
@@ -195,16 +207,8 @@ class search:
                 return
         else:
             # Search without cache
-            msg.dbg("Load intelligence-engine")
             cache_used = False
-
-            try:
-                inteli_e_result = []
-                inteli_e_thread = Thread(target=run_inteli_e, args=(query, inteli_e_result))
-                inteli_e_thread.start()
-            except Exception as e:
-                msg.fatal_error(f"Exception: {e}")
-            
+         
             if index.count(query=index_key) > 0 and not request_from_system:
                 try:
                     msg.info("Use result in index.")
@@ -266,33 +270,33 @@ class search:
             i -= 1
 
 
-        if not cache_used:
-            msg.dbg("Wait for inteli_e")
 
+        msg.dbg("Wait for inteli_e")
+
+        try:
+            while inteli_e_thread.is_alive():
+                pass
+            msg.dbg(f"inteli_e result: {inteli_e_result[0]}")
+        except Exception as e:
+            msg.error(f"Exception: {e}")
+        
+        if not archive_used and not cache_used:
             try:
-                while inteli_e_thread.is_alive():
-                    pass
-                msg.dbg(f"inteli_e result: {inteli_e_result[0]}")
+                if result["answers"][0] != None:
+                    result["answers"][0] = {'type': 'answer', 'answer': result["answers"][0]}
+            except:
+                msg.dbg("No origin answer")
+
+        if inteli_e_result[0] != None:
+            result_answer_lock = True
+            msg.dbg("Overwrite answers[0] by inteli_e_result !")
+            try:
+                result["answers"].insert(0, inteli_e_result[0])
             except Exception as e:
                 msg.error(f"Exception: {e}")
-        
-            if not archive_used:
-                try:
-                    if result["answers"][0] != None:
-                        result["answers"][0] = {'type': 'answer', 'answer': result["answers"][0]}
-                except:
-                    msg.dbg("No origin answer")
-
-            if inteli_e_result[0] != None:
-                result_answer_lock = True
-                msg.dbg("Overwrite answers[0] by inteli_e_result !")
-                try:
-                    result["answers"].insert(0, inteli_e_result[0])
-                except Exception as e:
-                    msg.error(f"Exception: {e}")
-            else:
-                result_answer_lock = False
-                msg.dbg("No info from inteli_e")
+        else:
+            result_answer_lock = False
+            msg.dbg("No info from inteli_e")
 
         # Anti XSS
         try:
