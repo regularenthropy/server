@@ -258,14 +258,16 @@ class search:
                 del result["results"][i]
             else:
                 msg.dbg(f"Do not kill result[{i}]")
-            
-            #言語最適化
-            try:
-                if language == "ja-JP" and lang.chk(query) != "zh":
-                    if lang.chk(result["results"][i]["content"]) == "zh":
-                        del result["results"][i]
-            except KeyError:
-                pass
+
+                #言語最適化
+                try:
+                    if language == "ja-JP" and lang.chk(query) != "zh":
+                        if lang.chk(result["results"][i]["content"]) == "zh":
+                            del result["results"][i]
+                except KeyError:
+                    pass
+                except Exception as e:
+                    msg.warn(f"Unexpected exception: {e}")
 
             i -= 1
 
