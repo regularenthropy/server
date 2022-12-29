@@ -10,4 +10,5 @@ def chk(texts):
     # chinese
     if re.search("[\u4e00-\u9FFF]", texts):
         return "zh"
+
     return "other"
