@@ -289,12 +289,14 @@ class search:
 
         if inteli_e_result[0] != None:
             result_answer_lock = True
+            inteli_e_answer = True
             msg.dbg("Overwrite answers[0] by inteli_e_result !")
             try:
                 result["answers"].insert(0, inteli_e_result[0])
             except Exception as e:
                 msg.error(f"Exception: {e}")
         else:
+            inteli_e_answer = False
             result_answer_lock = False
             msg.dbg("No info from inteli_e")
 
@@ -375,8 +377,15 @@ class search:
 
         # Archive result to DB
         if os.environ['FREA_ACTIVE_MODE'] == "true" and not cache_used :
+            if inteli_e_answer:
+                try:
+                    del result["answers"][0]
+                except:
+                    pass
+
             result_hash = hashlib.md5(str(result).encode()).hexdigest()
             msg.dbg(f"result_hash: {result_hash}")
+
             try:
                 job_queue.insert(dict(hash=result_hash, result=str(result), archived=False, analyzed=0, query=index_key))
                 db.commit()

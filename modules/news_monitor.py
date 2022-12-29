@@ -20,7 +20,7 @@ def get_tsunami_info():
         response = {'no_tsunami': "true", 'error': "true"}
     else:
         if result[0]["cancelled"]:
-            response = {'no_tsunami': 'true'}
+            response = {'no_tsunami': "true"}
         else:
             grade = result[0]["areas"][0]["grade"]
             if grade == "Watch":
@@ -32,7 +32,7 @@ def get_tsunami_info():
             else:
                 grade_disp = "津波に関する情報"
 
-            response = {'no_tsunami': 'false', 'grade': grade_disp}
+            response = {'no_tsunami': "false", 'grade': grade_disp}
     
     return response
 

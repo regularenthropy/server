@@ -165,7 +165,6 @@ def get_train_info(query):
 def get_tsunami_info():
     try:
         tsunami_result_str = redis.get("tsunami_status").decode("UTF-8")
-        msg.info(tsunami_result_str)
         tsunami_result = ast.literal_eval(tsunami_result_str)
     except Exception as e:
         msg.error(f"Faild to get data from redis! Exception: {str(e)}")
