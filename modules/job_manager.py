@@ -72,6 +72,7 @@ if not os.path.exists("/app/mecab/dic_installed"):
     _mecab_dic_dl_result = os.system("bash /app/modules/download_dic.sh")
     if _mecab_dic_dl_result != 0:
         msg.fatal_error(f"Faild to download MeCab dictionary! \nExit code: {str(_mecab_dic_dl_result)}")
+        sys.exit(1)
 
 while True:
     time.sleep(10)
