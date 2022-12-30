@@ -38,12 +38,12 @@ try:
 except KeyError as e:
     msg.warn("Do not use proxy")
 else:
-    with open("/etc/searxng/settings.yml", "r+") as f:
+    with open("/etc/searxng/settings.yml", "r") as f:
         searxng_config = yaml.safe_load(f)
         searxng_config["outgoing"]["proxies"] = {}
         searxng_config["outgoing"]["proxies"]["all://"] = []
         searxng_proxy_cfg = searxng_config["outgoing"]["proxies"]["all://"]
-  
+
         i = 0
         while True:
             try:
@@ -64,6 +64,8 @@ else:
             else:
                 i += 1
 
+    #os.remove("/etc/searxng/settings.yml")
+    with open('/etc/searxng/settings.yml', 'w') as f:
         yaml.dump(searxng_config, f)
         del searxng_config
 

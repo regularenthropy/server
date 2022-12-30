@@ -33,7 +33,6 @@ RUN cp -r /app/etc/* /etc/ \
  && cd /app \
  && rm -rf etc requirements.txt \
  && echo "dicdir = /app/mecab/mecab-ipadic-neologd" > /usr/local/etc/mecabrc \
- #&& chown app:app /etc/searxng/settings.yml \
  && chown app:app -R /etc/searxng
 
 CMD ["su", "app", "-c", "python3 -u core.py"]
