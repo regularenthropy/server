@@ -41,6 +41,7 @@ msg.info("Starting news_monitor")
 # Config redis
 try:
     redis = redis.Redis(host='127.0.0.1', port=6379, db=1)
+    redis.set("should_i_die", "true")
 except Exception as e:
     msg.fatal_error(f"Faild to connect Redis! Exception: {str(e)}")
     sys.exit(1)
