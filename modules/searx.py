@@ -33,35 +33,45 @@ async def exec(program: str, args: list[str]) -> None:
 # Config SearXNG
 msg.info("Configuring SearXNG configuration file...")
 
-with open("/etc/searxng/settings.yml", "r+") as f:
-  searxng_config = yaml.safe_load(f)
-  
-  i = 0
-  while True:
-    try:
-        searxng_config["outgoing"]["proxies"]["all://"][i] = os.environ[f'FREA_PROXY_{i}']
-        msg.info(f"Use proxy {i} ({os.environ[f'FREA_PROXY_{i}']})")
-    except:
-        # Do not use proxy
-        if i == 0:
-            msg.warn("Do not use proxy")
+try:
+    os.environ[f'FREA_PROXY_0']
+except KeyError as e:
+    msg.warn("Do not use proxy")
+else:
+    with open("/etc/searxng/settings.yml", "r") as f:
+        searxng_config = yaml.safe_load(f)
+        searxng_config["outgoing"]["proxies"] = {}
+        searxng_config["outgoing"]["proxies"]["all://"] = []
+        searxng_proxy_cfg = searxng_config["outgoing"]["proxies"]["all://"]
+
+        i = 0
+        while True:
             try:
-                del searxng_config["outgoing"]["proxies"]
-            except:
-                pass
+                searxng_proxy_cfg.append(os.environ[f'FREA_PROXY_{i}'])
+                msg.info(f"Use proxy {i} ({os.environ[f'FREA_PROXY_{i}']})")
+            except KeyError:
+                # Do not use proxy
+                if i == 0:
+                    msg.warn("Do not use proxy")
+                    try:
+                        del searxng_config["outgoing"]["proxies"]
+                    except:
+                        pass
 
-        del i
-        break
+                del i
+                break
 
-    else:
-        i += 1
+            else:
+                i += 1
 
-  yaml.dump(searxng_config, f)
+    #os.remove("/etc/searxng/settings.yml")
+    with open('/etc/searxng/settings.yml', 'w') as f:
+        yaml.dump(searxng_config, f)
+        del searxng_config
 
 
 # Start SearXNG
 os.chdir('searxng/src')
-del searxng_config
 
 
 if os.system('sed -i "s/ultrasecretkey/$(openssl rand -hex 32)/g" /etc/searxng/settings.yml') != 0:

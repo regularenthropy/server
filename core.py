@@ -23,16 +23,19 @@ from modules import msg
 import os
 import sys
 from pyfiglet import Figlet
-import subprocess
 import threading
+import multiprocessing
 import string
 import secrets
+import time
+import requests
+import redis
 
 
 aa = Figlet(font="slant")
 welcome_aa = aa.renderText("Frea Search")
 
-print("Frea Search API Server ver.4.13 (codename: Crystal Rain)\n")
+print("Frea Search API Server ver.4.14 (codename: Crystal Rain)\n")
 print(welcome_aa)
 print("\n(c) 2022 nexryai\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details.\n\n")
 
@@ -61,58 +64,152 @@ os.environ['FREA_SECRET'] = ''.join(secrets.choice(chars) for i in range(20))
 
 def start_nginx():
     msg.info("Starting nginx....")
-    subprocess.call(["python3", "-u", "modules/nginx.py"])
+    os.system("python3 -u modules/nginx.py")
 
 def start_search_api_server():
     msg.info("Starting search API server workers....")
-    subprocess.call(["python3", "-u", "modules/worker.py"])
+    os.system("python3 -u modules/worker.py")
 
 def start_searxng():
     msg.info("Starting SearXNG....")
-    subprocess.call(["python3", "-u", "modules/searx.py"])
+    os.system("python3 -u modules/searx.py")
 
 def start_redis():
     msg.info("Starting redis....")
-    subprocess.call(["python3", "-u", "modules/redis_server.py"])
+    os.system("python3 -u modules/redis_server.py")
 
 def start_job_manager():
-    subprocess.call(["python3", "-u", "modules/job_manager.py"])
+    os.system("python3 -u modules/job_manager.py")
 
 def start_index_manager():
-    subprocess.call(["python3", "-u", "modules/index_manager.py"])
+    os.system("python3 -u modules/index_manager.py")
 
 def start_news_monitor():
-    subprocess.call(["python3", "-u", "modules/news_monitor.py"])
+    os.system("python3 -u modules/news_monitor.py")
 
 
 # Start nginx
-nginx_server_thread = threading.Thread(target=start_nginx)
+nginx_server_thread = multiprocessing.Process(target=start_nginx)
 nginx_server_thread.start()
 
 # Start API server
-search_server_thread = threading.Thread(target=start_search_api_server)
+search_server_thread = multiprocessing.Process(target=start_search_api_server)
 search_server_thread.start()
 
 # Start searx
-searx_server_thread = threading.Thread(target=start_searxng)
+searx_server_thread = multiprocessing.Process(target=start_searxng)
 searx_server_thread.start()
 
 # Start redis
-redis_server_thread = threading.Thread(target=start_redis)
+redis_server_thread = multiprocessing.Process(target=start_redis)
 redis_server_thread.start()
 
 # Start news_monitor
-news_monitor_thread = threading.Thread(target=start_news_monitor)
+news_monitor_thread = multiprocessing.Process(target=start_news_monitor)
 news_monitor_thread.start()
 
 
 if os.environ['FREA_ACTIVE_MODE'] == "true" :
     msg.info("Starting job manager...")
-    job_manager_thread = threading.Thread(target=start_job_manager)
+    job_manager_thread = multiprocessing.Process(target=start_job_manager)
     job_manager_thread.start()
     
     msg.info("Starting index manager...")
-    index_manager_thread = threading.Thread(target=start_index_manager)
+    index_manager_thread = multiprocessing.Process(target=start_index_manager)
     index_manager_thread.start()
 
-search_server_thread.join()
+
+time.sleep(10)
+
+msg.info("Starting error monitor...")    
+
+def suicide():
+    #FIXME: なんかもっと良い書き方あると思うけどどっかで失敗しても処理を続ける方法がこれしか分からん。
+
+    try:
+        nginx_server_thread.terminate()
+    except:
+        pass
+    
+    try:
+        search_server_thread.terminate()
+    except:
+        pass
+    
+    try:
+        searx_server_thread.terminate()
+    except:
+        pass
+    
+    try:
+        redis_server_thread.terminate()
+    except:
+        pass
+    
+    try:
+        news_monitor_thread.terminate()
+    except:
+        pass
+    
+    try:
+        job_manager_thread.terminate()
+    except:
+        pass
+    
+    try:
+        index_manager_thread.terminate()
+    except:
+        pass
+
+
+# Config redis
+try:
+    redis = redis.Redis(host='127.0.0.1', port=6379, db=1)
+    if not redis.exists("should_i_die"):
+        redis.set("should_i_die", "false")
+except Exception as e:
+    msg.fatal_error(f"Faild to connect Redis! Exception: {str(e)}")
+    suicide()
+    sys.exit(1)
+else:
+    pass
+
+
+while True:
+    try:
+        should_i_die = redis.get("should_i_die").decode("UTF-8")
+        if should_i_die != "false" :
+            try:
+                should_i_die_reporter = redis.get("should_i_die.reporter").decode("UTF-8")
+            except:
+                should_i_die_reporter = "unknown"
+
+            msg.error(f"Monitoring error. A critical error was reported by another module ({should_i_die_reporter}).")
+            suicide()
+            sys.exit(1)
+    except Exception as e:
+        msg.error(f"Monitoring error. Failed to read value from Redis. Exit.  (Exception: {e})")
+        suicide()
+        sys.exit(1)
+    
+    # Check Redis 
+    try:
+        redis.set("test", "test")
+    except Exception as e:
+        msg.error(f"Monitoring error. Failed to write value to Redis. Exit.  (Exception: {e})")
+        suicide()
+        sys.exit(1)
+    
+    # Check SearXNG
+    try:
+        test_req = requests.get('http://127.0.0.1:8888/healthz')
+        if test_req.status_code != requests.codes.ok :
+            msg.fatal_error(f"Monitoring error. SearXNG health check page returned http status ({test_req.status_code}).")
+            suicide()
+            sys.exit(1)
+    except Exception as e:
+        msg.error(f"Monitoring error. SearXNG health check failed. Exit.  (Exception: {e})")
+        suicide()
+        sys.exit(1)
+    
+    time.sleep(30)

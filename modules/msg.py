@@ -24,6 +24,7 @@ import os
 import time
 import inspect
 
+
 def info(message):
     target_file = os.path.splitext(os.path.basename(inspect.stack()[1].filename))[0]
     sys.stdout.write(f"[{target_file}]\033[32;1m [INFO]\033[0m " + str(message) + "\n")
@@ -42,7 +43,14 @@ def error(message):
     sys.stderr.write(f"[{target_file}]\033[31;1m [ERROR] " + str(message) + "\033[0m\n")
 
 def fatal_error(message):
+    import redis
     target_file = os.path.splitext(os.path.basename(inspect.stack()[1].filename))[0]
     sys.stderr.write("\n\033[31;1m=!=========FATAL ERROR=========!=\n")
     sys.stderr.write(f"\033[31m[{target_file}] {message}\n")
     sys.stderr.write("\033[31;1m=================================\033[0m\n")
+    try:
+        redis = redis.Redis(host='127.0.0.1', port=6379, db=1)
+    except:
+        pass
+    redis.set("should_i_die", "true")
+    redis.set("should_i_die.reporter", target_file)
