@@ -124,13 +124,42 @@ time.sleep(10)
 msg.info("Starting error monitor...")    
 
 def suicide():
-    nginx_server_thread.terminate()
-    search_server_thread.terminate()
-    searx_server_thread.terminate()
-    redis_server_thread.terminate()
-    news_monitor_thread.terminate()
-    job_manager_thread.terminate()
-    index_manager_thread.terminate()
+    #FIXME: なんかもっと良い書き方あると思うけどどっかで失敗しても処理を続ける方法がこれしか分からん。
+
+    try:
+        nginx_server_thread.terminate()
+    except:
+        pass
+    
+    try:
+        search_server_thread.terminate()
+    except:
+        pass
+    
+    try:
+        searx_server_thread.terminate()
+    except:
+        pass
+    
+    try:
+        redis_server_thread.terminate()
+    except:
+        pass
+    
+    try:
+        news_monitor_thread.terminate()
+    except:
+        pass
+    
+    try:
+        job_manager_thread.terminate()
+    except:
+        pass
+    
+    try:
+        index_manager_thread.terminate()
+    except:
+        pass
 
 
 # Config redis
