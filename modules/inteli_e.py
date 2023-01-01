@@ -2,15 +2,11 @@
 
 import sys
 import os
-import datetime
-from zoneinfo import ZoneInfo
 import requests
 import json
 import ast
 
 import redis
-import feedparser
-import pygeonlp.api
 
 import msg
 
@@ -26,6 +22,10 @@ else:
 
 
 def get_weather(query):
+    import pygeonlp.api
+    import datetime
+    from zoneinfo import ZoneInfo
+
     user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:105.0) Gecko/20100101 Firefox/105.0'
     header = {
 	    'User-Agent': user_agent
@@ -142,10 +142,16 @@ def get_weather(query):
         
 
     response = {'weather': weather_icon_name_to_japanese(weather), 'temp_now': temp_now, 'weather_d2': weather_icon_name_to_japanese(weather_d2), 'weather_d3': weather_icon_name_to_japanese(weather_d3), 'maxtemp_d2': maxtemp_d2, 'mintemp_d2': mintemp_d2, 'maxtemp_d3': maxtemp_d3, 'mintemp_d3': mintemp_d3, 'd2_disp':  str(date_d2_month) + '/' + str(date_d2_day), 'd3_disp':  str(date_d3_month) + '/' + str(date_d3_day), 'location_name': location_name} 
+    
+    del pygeonlp.api
+    del datetime
+    del ZoneInfo
+
     return response
 
 
 def get_train_info(query):
+    import feedparser
     feed_data = feedparser.parse('http://api.tetsudo.com/traffic/atom.xml')
 
     for entry in feed_data.entries:
@@ -158,6 +164,7 @@ def get_train_info(query):
         else:
             result = "NO_DATA"
 
+    del feedparser
     return result
 
 
