@@ -18,16 +18,17 @@ along with Frea Search. If not, see < http://www.gnu.org/licenses/ >.
                    nexryai <gnomer@tuta.io>
 '''
 
-import msg
-import analyze
-
 import time
 import os
 import sys
-import dataset
 import redis
 import requests
 import json
+
+import dataset
+
+import msg
+
 
 # Load DB config from env
 msg.info("Loading DB config...")

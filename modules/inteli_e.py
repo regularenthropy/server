@@ -1,17 +1,16 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 import sys
-import chardet
 import os
 import datetime
 from zoneinfo import ZoneInfo
 import requests
 import json
 import ast
+
 import redis
-import urllib
-import pygeonlp.api
 import feedparser
+import pygeonlp.api
 
 import msg
 

@@ -18,26 +18,25 @@ along with Frea Search. If not, see < http://www.gnu.org/licenses/ >.
                    nexryai <gnomer@tuta.io>
 '''
 
-import falcon
-import falcon.asgi
-import uvicorn
-
 import os
 import sys
 import requests
-import logging
 import json
 import ast
-import yaml
-import tldextract
 import hashlib
 import asyncio
 from threading import Thread
-import dataset
-import redis
 from html import escape
 import urllib.parse
 import time
+
+import falcon
+import falcon.asgi
+import uvicorn
+import dataset
+import redis
+import tldextract
+import yaml
 
 import msg
 import inteli_e

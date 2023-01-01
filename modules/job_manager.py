@@ -28,6 +28,11 @@ import ast
 import dataset
 
 analyzer_version = 103
+memory_debug = False
+
+
+if memory_debug:
+    import tracemalloc
 
 # Load DB config from env
 msg.info("Loading DB config...")
@@ -74,14 +79,22 @@ if not os.path.exists("/app/mecab/dic_installed"):
         msg.fatal_error(f"Faild to download MeCab dictionary! \nExit code: {str(_mecab_dic_dl_result)}")
         sys.exit(1)
 
+
+
 while True:
+
+    if memory_debug:
+        tracemalloc.start()
+        snapshot1 = tracemalloc.take_snapshot()
+
     time.sleep(10)
     msg.dbg("Check job queue...")
     job_queue.delete(hash="TEST")
     job_queue.delete(query=None)
     job_queue.delete(score=None)
 
-    for analyze_result in db['queue']:
+
+    for analyze_result in job_queue:
         msg.dbg("Loading result from job queue...")
         result_dict = ast.literal_eval(analyze_result["result"])
         
@@ -116,6 +129,7 @@ while True:
                             db.rollback()
 
                 time.sleep(0.1)
+
         
         if len(result_dict["unresponsive_engines"]) >= 4:
             job_queue.delete(hash=analyze_result["hash"])
@@ -158,3 +172,14 @@ while True:
         except Exception as e:
             msg.fatal_error(f"Faild to save index to DB. \nException: {e}")
             db.rollback()
+
+    if memory_debug:
+        snapshot2 = tracemalloc.take_snapshot()
+        top_stats = snapshot2.compare_to(snapshot1, 'traceback')
+
+        print("[ Memory Analysis ]")
+        for stat in top_stats[:10]:
+            print(stat)
+            for line in stat.traceback.format():
+                print(line)
+        print("=====")
