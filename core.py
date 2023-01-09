@@ -14,7 +14,7 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with Frea Search. If not, see < http://www.gnu.org/licenses/ >.
 
-(C) 2022  Frea Search, Ablaze
+(C) 2022-2023  Frea Search, Ablaze
                    nexryai <gnomer@tuta.io>
 '''
 
@@ -37,7 +37,7 @@ welcome_aa = aa.renderText("Frea Search")
 
 print("Frea Search API Server ver.4.14 (codename: Crystal Rain)\n")
 print(welcome_aa)
-print("\n(c) 2022 nexryai\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details.\n\n")
+print("\n(c) 2022-2023 nexryai\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details.\n\n")
 
 try:
     debug_mode = os.environ['FREA_DEBUG_MODE']
