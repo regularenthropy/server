@@ -33,6 +33,9 @@ RUN cp -r /app/etc/* /etc/ \
  && cd /app \
  && rm -rf etc requirements.txt \
  && echo "dicdir = /app/mecab/mecab-ipadic-neologd" > /usr/local/etc/mecabrc \
- && chown app:app -R /etc/searxng
+ && chown app:app -R /etc/searxng \
+ && cd /app/blocklists/ \
+ && bash mkblocklist.sh \
+ && mv new.yml main.yml
 
 CMD ["su", "app", "-c", "python3 -u core.py"]
