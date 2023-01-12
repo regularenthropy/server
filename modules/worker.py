@@ -329,11 +329,9 @@ class search:
         # Set number_of_results and time_stamp
         if len(result["results"]) == 0 and len(result["unresponsive_engines"]) >= 3:
             msg.error("Faild to get results from upstream engine")
-            # ToDo
-            # result = {"error": "FAILD_TO_GET_RESULTS"}
+            result = {"error": "FAILD_TO_GET_RESULTS"}
             resp.status = falcon.HTTP_503
-            #resp.body = json.dumps(result, ensure_ascii=False)
-            resp.body = "FAILD_TO_GET_RESULT"
+            resp.body = json.dumps(result, ensure_ascii=False)
             return
         else:
             result["number_of_results"] = len(result["results"])
