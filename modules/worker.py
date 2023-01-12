@@ -29,6 +29,7 @@ from threading import Thread
 from html import escape
 import urllib.parse
 import time
+import multiprocessing
 
 import falcon
 import falcon.asgi
@@ -488,4 +489,9 @@ if __name__ != "__main__":
 if __name__ == "__main__":
     msg.dbg("Debug mode!!!!")
     msg.info("Main worker is OK.")
-    uvicorn.run("worker:app", host="0.0.0.0", port=8889, workers=5, log_level="info", limit_concurrency=2, timeout_keep_alive=3)
+
+    # CPUのコア数+1だけワーカーを起こす
+    use_workers = multiprocessing.cpu_count() + 1
+    msg.info(f"Starting {use_workers} workers")
+
+    uvicorn.run("worker:app", host="0.0.0.0", port=8889, workers=use_workers, log_level="info", limit_concurrency=2, timeout_keep_alive=3)
