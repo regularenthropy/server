@@ -6,7 +6,7 @@ COPY ./searxng/src/requirements.txt ./searxng/src/
 
 RUN apt update -y \
  && apt upgrade -y \
- && apt install -y openssl python3 python3-pip nginx libboost-all-dev mecab-ipadic sqlite libpq5 redis python3-dev libboost-dev libmecab-dev libsqlite3-dev libpq-dev build-essential util-linux brotli wget unzip \
+ && apt install -y tini openssl python3 python3-pip nginx libpq5 redis python3-dev libboost-dev libmecab-dev libpq-dev build-essential util-linux brotli wget unzip \
  && pip3 install --no-cache -r requirements.txt \
  && pip3 install --no-cache -r ./searxng/src/requirements.txt \
  && groupadd app \
@@ -17,7 +17,7 @@ RUN apt update -y \
  && chown -R app:app /var/run/nginx.pid \
  && chown -R app:app /var/lib/nginx \
  && chown -R app:app /var/log/nginx \
- && apt purge -y python3-dev libboost-dev libmecab-dev libsqlite3-dev libpq-dev build-essential \
+ && apt purge -y python3-dev libpq-dev build-essential \
  && apt autoremove --purge -y \
  && apt clean
 
@@ -38,6 +38,7 @@ RUN cp -r /app/etc/* /etc/ \
  && bash mkblocklist.sh \
  && mv new.yml main.yml \
  && apt purge -y curl \
+ && apt autoremove --purge -y \
  && apt clean
 
-CMD ["su", "app", "-c", "python3 -u core.py"]
+CMD ["tini", "--", "su", "app", "-c", "python3 -u core.py"]
