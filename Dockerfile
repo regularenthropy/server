@@ -12,7 +12,7 @@ RUN apt update -y \
  && groupadd app \
  && useradd -d /app -s /bin/sh -g app app \
  && chown -R app:app /app \
- && su app -c "python3 -m pygeonlp.api setup /usr/pygeonlp_basedata" \
+ #&& su app -c "python3 -m pygeonlp.api setup /usr/pygeonlp_basedata" \
  && touch /var/run/nginx.pid \
  && chown -R app:app /var/run/nginx.pid \
  && chown -R app:app /var/lib/nginx \

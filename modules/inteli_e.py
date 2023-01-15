@@ -204,22 +204,7 @@ def main(query):
         if result != "NO_DATA":
             message = '"' + train_name + '"の運行情報があります。'
             return {'type': 'answer', 'answer': message, 'url': result}
-'''
-    if '天気' in query:
-        msg.dbg("Check weather info....")
 
-        result = get_weather(query)
-
-        msg.dbg(f"Weather result: {result}")
-
-        if result == "NO_DATA":
-            msg.dbg("Weather result is NO_DATA")
-            return None
-
-        message=f"今後の{result['location_name']}の天気は{result['weather']}、現在の気温は{result['temp_now']}℃です。明日（{result['d2_disp']}）は最高気温{result['maxtemp_d2']}℃で{result['weather_d2']}、明後日（{result['d3_disp']}）は最高気温{result['maxtemp_d3']}℃で{result['weather_d2']}になる予想です。"
-        weather_data = {'type': 'answer', 'answer': message}
-        return weather_data
-'''
     if 'コロナ' in query:
         w_message = "新型コロナウイルス感染症に関する正しい情報をお求めの場合は、厚生労働省のwebサイトをご確認ください。"
         link = "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000164708_00001.html"
