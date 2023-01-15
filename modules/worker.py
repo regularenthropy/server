@@ -49,9 +49,9 @@ encode_query = urllib.parse.quote
 class chk:
     @staticmethod
     def is_in_untrusted_domain(root_domain, domain):
-        if root_domain in untrusted_domains:
+        if redis.exists(f"blocklists.untrusted.{root_domain}"):
             return True
-        elif domain in untrusted_domains:
+        elif redis.exists(f"blocklists.untrusted.{domain}"):
             return True
         else:
             return False
@@ -95,10 +95,10 @@ class chk:
 
     @staticmethod
     def chk_domain(root_domain, domain):
-        if root_domain in block_domains:
+        if redis.exists(f"blocklists.domain.{root_domain}"):
             msg.dbg(f"Block domain in root_domain ({root_domain}) !!!")
             return True
-        elif domain in block_domains:
+        elif redis.exists(f"blocklists.domain.{domain}"):
             msg.dbg(f"Block domain in domain ({domain}) !!!")
             return True
         else:
@@ -406,18 +406,10 @@ class fckputin:
         resp.body =  "{\"message\": \"FCKPUTIN\"}"
 
 
-# 構成をロード
+
 debug_mode = True
 
 try:
-    with open(f"blocklists/main.yml", "r", encoding="utf8") as yml:
-        load_block_domains = yaml.safe_load(yml)
-        block_domains = load_block_domains["domains"]
-
-    with open(f"blockwords/untrusted_domains.yml", "r", encoding="utf8") as yml:
-        load_untrusted_domains = yaml.safe_load(yml)
-        untrusted_domains = load_untrusted_domains["domains"]
-
     with open(f"blockwords/block_words.yml", "r", encoding="utf8") as yml:
         load_block_words = yaml.safe_load(yml)
         block_words = load_block_words["words"]

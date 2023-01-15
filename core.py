@@ -35,7 +35,7 @@ import redis
 aa = Figlet(font="slant")
 welcome_aa = aa.renderText("Frea Search")
 
-print("Frea Search API Server ver.4.14 (codename: Crystal Rain)\n")
+print("Frea Search API Server ver.4.20 (codename: Crystal Rain)\n")
 print(welcome_aa)
 print("\n(c) 2022-2023 nexryai\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details.\n\n")
 
@@ -117,6 +117,15 @@ if os.environ['FREA_ACTIVE_MODE'] == "true" :
     msg.info("Starting index manager...")
     index_manager_thread = multiprocessing.Process(target=start_index_manager)
     index_manager_thread.start()
+
+
+time.sleep(1)
+
+# Run blocklists_loader.py
+_blocklists_loader_result = os.system("python3 -u modules/blocklists_loader.py")
+if _blocklists_loader_result != 0:
+    msg.fatal_error(f"Faild to load blocklists! \nExit code: {str(_blocklists_loader_result)}")
+    sys.exit(1)
 
 
 time.sleep(10)
