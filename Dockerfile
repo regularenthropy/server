@@ -33,8 +33,11 @@ RUN cp -r /app/etc/* /etc/ \
  && rm -rf etc requirements.txt \
  && echo "dicdir = /app/mecab/mecab-ipadic-neologd" > /usr/local/etc/mecabrc \
  && chown app:app -R /etc/searxng \
+ && apt install -y curl \
  && cd /app/blocklists/ \
  && bash mkblocklist.sh \
- && mv new.yml main.yml
+ && mv new.yml main.yml \
+ && apt purge -y curl \
+ && apt clean
 
 CMD ["su", "app", "-c", "python3 -u core.py"]
