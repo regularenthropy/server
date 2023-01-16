@@ -9,8 +9,8 @@ RUN apt update -y \
  && apt install -y tini openssl python3 python3-pip nginx libpq5 redis python3-dev libboost-dev libmecab-dev libpq-dev build-essential util-linux brotli wget unzip \
  && pip3 install --no-cache -r requirements.txt \
  && pip3 install --no-cache -r ./searxng/src/requirements.txt \
- && groupadd app \
- && useradd -d /app -s /bin/sh -g app app \
+ && groupadd -g 1000 app \
+ && useradd -d /app -s /bin/sh -u 1000 -g app app \
  && chown -R app:app /app \
  #&& su app -c "python3 -m pygeonlp.api setup /usr/pygeonlp_basedata" \
  && touch /var/run/nginx.pid \
@@ -39,6 +39,8 @@ RUN cp -r /app/etc/* /etc/ \
  && mv new.yml main.yml \
  && apt purge -y curl \
  && apt autoremove --purge -y \
- && apt clean
+ && apt clean \
+ && chown app:app -R /app
 
-CMD ["tini", "--", "su", "app", "-c", "python3 -u core.py"]
+USER app
+CMD ["tini", "--", "/usr/bin/python3", "-u", "/app/core.py"]
