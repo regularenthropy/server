@@ -1,17 +1,12 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 import sys
-import chardet
 import os
-import datetime
-from zoneinfo import ZoneInfo
 import requests
 import json
 import ast
+
 import redis
-import urllib
-import pygeonlp.api
-import feedparser
 
 import msg
 
@@ -25,8 +20,12 @@ except Exception as e:
 else:
     msg.info("Redis ok!")
 
-
+'''
 def get_weather(query):
+    import pygeonlp.api
+    import datetime
+    from zoneinfo import ZoneInfo
+
     user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:105.0) Gecko/20100101 Firefox/105.0'
     header = {
 	    'User-Agent': user_agent
@@ -143,10 +142,16 @@ def get_weather(query):
         
 
     response = {'weather': weather_icon_name_to_japanese(weather), 'temp_now': temp_now, 'weather_d2': weather_icon_name_to_japanese(weather_d2), 'weather_d3': weather_icon_name_to_japanese(weather_d3), 'maxtemp_d2': maxtemp_d2, 'mintemp_d2': mintemp_d2, 'maxtemp_d3': maxtemp_d3, 'mintemp_d3': mintemp_d3, 'd2_disp':  str(date_d2_month) + '/' + str(date_d2_day), 'd3_disp':  str(date_d3_month) + '/' + str(date_d3_day), 'location_name': location_name} 
-    return response
+    
+    del pygeonlp.api
+    del datetime
+    del ZoneInfo
 
+    return response
+'''
 
 def get_train_info(query):
+    import feedparser
     feed_data = feedparser.parse('http://api.tetsudo.com/traffic/atom.xml')
 
     for entry in feed_data.entries:
@@ -159,6 +164,7 @@ def get_train_info(query):
         else:
             result = "NO_DATA"
 
+    del feedparser
     return result
 
 
@@ -198,34 +204,6 @@ def main(query):
         if result != "NO_DATA":
             message = '"' + train_name + '"の運行情報があります。'
             return {'type': 'answer', 'answer': message, 'url': result}
-
-    if '天気' in query:
-        msg.dbg("Check weather info....")
-
-        result = get_weather(query)
-
-        msg.dbg(f"Weather result: {result}")
-
-        if result == "NO_DATA":
-            msg.dbg("Weather result is NO_DATA")
-            return None
-
-        message=f"今後の{result['location_name']}の天気は{result['weather']}、現在の気温は{result['temp_now']}℃です。明日（{result['d2_disp']}）は最高気温{result['maxtemp_d2']}℃で{result['weather_d2']}、明後日（{result['d3_disp']}）は最高気温{result['maxtemp_d3']}℃で{result['weather_d2']}になる予想です。"
-        '''
-        weather_data = {'type': 'weather',  'answer': message, 
-                        'weather': 'MET Norway', 
-                        'hide_icon': 'true',
-                        'weather_icon': result['weather'],
-                        'weather_temp': result['temp_now'],
-                        'weather_icon_2d': result['weather_d2'],
-                        'weather_temp_2d': result['maxtemp_d2'],
-                        'weather_icon_3d': result['weather_d3'],
-                        'weather_temp_3d': result['maxtemp_d3'],
-                        'd2_disp': result['d2_disp'],
-                        'd3_disp': result['d3_disp']}
-        '''
-        weather_data = {'type': 'answer', 'answer': message}
-        return weather_data
 
     if 'コロナ' in query:
         w_message = "新型コロナウイルス感染症に関する正しい情報をお求めの場合は、厚生労働省のwebサイトをご確認ください。"

@@ -18,26 +18,26 @@ along with Frea Search. If not, see < http://www.gnu.org/licenses/ >.
                    nexryai <gnomer@tuta.io>
 '''
 
-import falcon
-import falcon.asgi
-import uvicorn
-
 import os
 import sys
 import requests
-import logging
 import json
 import ast
-import yaml
-import tldextract
 import hashlib
 import asyncio
 from threading import Thread
-import dataset
-import redis
 from html import escape
 import urllib.parse
 import time
+import multiprocessing
+
+import falcon
+import falcon.asgi
+import uvicorn
+import dataset
+import redis
+import tldextract
+import yaml
 
 import msg
 import inteli_e
@@ -49,9 +49,9 @@ encode_query = urllib.parse.quote
 class chk:
     @staticmethod
     def is_in_untrusted_domain(root_domain, domain):
-        if root_domain in untrusted_domains:
+        if redis.exists(f"blocklists.untrusted.{root_domain}"):
             return True
-        elif domain in untrusted_domains:
+        elif redis.exists(f"blocklists.untrusted.{domain}"):
             return True
         else:
             return False
@@ -95,10 +95,10 @@ class chk:
 
     @staticmethod
     def chk_domain(root_domain, domain):
-        if root_domain in block_domains:
+        if redis.exists(f"blocklists.domain.{root_domain}"):
             msg.dbg(f"Block domain in root_domain ({root_domain}) !!!")
             return True
-        elif domain in block_domains:
+        elif redis.exists(f"blocklists.domain.{domain}"):
             msg.dbg(f"Block domain in domain ({domain}) !!!")
             return True
         else:
@@ -329,11 +329,9 @@ class search:
         # Set number_of_results and time_stamp
         if len(result["results"]) == 0 and len(result["unresponsive_engines"]) >= 3:
             msg.error("Faild to get results from upstream engine")
-            # ToDo
-            # result = {"error": "FAILD_TO_GET_RESULTS"}
+            result = {"error": "FAILD_TO_GET_RESULTS"}
             resp.status = falcon.HTTP_503
-            #resp.body = json.dumps(result, ensure_ascii=False)
-            resp.body = "FAILD_TO_GET_RESULT"
+            resp.body = json.dumps(result, ensure_ascii=False)
             return
         else:
             result["number_of_results"] = len(result["results"])
@@ -408,18 +406,10 @@ class fckputin:
         resp.body =  "{\"message\": \"FCKPUTIN\"}"
 
 
-# 構成をロード
+
 debug_mode = True
 
 try:
-    with open(f"blocklists/main.yml", "r", encoding="utf8") as yml:
-        load_block_domains = yaml.safe_load(yml)
-        block_domains = load_block_domains["domains"]
-
-    with open(f"blockwords/untrusted_domains.yml", "r", encoding="utf8") as yml:
-        load_untrusted_domains = yaml.safe_load(yml)
-        untrusted_domains = load_untrusted_domains["domains"]
-
     with open(f"blockwords/block_words.yml", "r", encoding="utf8") as yml:
         load_block_words = yaml.safe_load(yml)
         block_words = load_block_words["words"]
@@ -489,4 +479,9 @@ if __name__ != "__main__":
 if __name__ == "__main__":
     msg.dbg("Debug mode!!!!")
     msg.info("Main worker is OK.")
-    uvicorn.run("worker:app", host="0.0.0.0", port=8889, workers=5, log_level="info", limit_concurrency=2, timeout_keep_alive=3)
+
+    # CPUのコア数+1だけワーカーを起こす
+    use_workers = multiprocessing.cpu_count() + 1
+    msg.info(f"Starting {use_workers} workers")
+
+    uvicorn.run("worker:app", host="0.0.0.0", port=8889, workers=use_workers, log_level="info", limit_concurrency=2, timeout_keep_alive=3)

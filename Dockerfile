@@ -1,26 +1,25 @@
-FROM fedora:37
+FROM ubuntu:latest
 WORKDIR /app
 
 COPY ./requirements.txt .
 COPY ./searxng/src/requirements.txt ./searxng/src/
 
-RUN dnf update -y \
- && dnf install -y openssl python3 python3-pip nginx boost mecab-ipadic sqlite libpq redis python3-devel boost-devel mecab-devel sqlite-devel libpq-devel make automake gcc gcc-c++ util-linux brotli wget unzip \
+RUN apt update -y \
+ && apt upgrade -y \
+ && apt install -y tini openssl python3 python3-pip nginx libpq5 redis python3-dev libboost-dev libmecab-dev libpq-dev build-essential util-linux brotli wget unzip \
  && pip3 install --no-cache -r requirements.txt \
  && pip3 install --no-cache -r ./searxng/src/requirements.txt \
-
- && groupadd app \
- && useradd -d /app -s /bin/sh -g app app \
-
+ && groupadd -g 1000 app \
+ && useradd -d /app -s /bin/sh -u 1000 -g app app \
  && chown -R app:app /app \
- && su app -c "python3 -m pygeonlp.api setup /usr/pygeonlp_basedata" \
-
+ #&& su app -c "python3 -m pygeonlp.api setup /usr/pygeonlp_basedata" \
  && touch /var/run/nginx.pid \
  && chown -R app:app /var/run/nginx.pid \
  && chown -R app:app /var/lib/nginx \
  && chown -R app:app /var/log/nginx \
- && dnf remove -y python3-devel boost-devel mecab-devel sqlite-devel libpq-devel make automake gcc gcc-c++ \
- && dnf autoremove -y
+ && apt purge -y python3-dev libpq-dev build-essential \
+ && apt autoremove --purge -y \
+ && apt clean
 
 COPY --chown=app:app . .
 
@@ -33,6 +32,15 @@ RUN cp -r /app/etc/* /etc/ \
  && cd /app \
  && rm -rf etc requirements.txt \
  && echo "dicdir = /app/mecab/mecab-ipadic-neologd" > /usr/local/etc/mecabrc \
- && chown app:app -R /etc/searxng
+ && chown app:app -R /etc/searxng \
+ && apt install -y curl \
+ && cd /app/blocklists/ \
+ && bash mkblocklist.sh \
+ && mv new.yml main.yml \
+ && apt purge -y curl \
+ && apt autoremove --purge -y \
+ && apt clean \
+ && chown app:app -R /app
 
-CMD ["su", "app", "-c", "python3 -u core.py"]
+USER app
+CMD ["tini", "--", "/usr/bin/python3", "-u", "/app/core.py"]
