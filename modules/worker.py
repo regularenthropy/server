@@ -241,7 +241,7 @@ class search:
                     resp.body = json.dumps(result, ensure_ascii=False)
                     msg.fatal_error(f"UPSTREAM_ENGINE_ERROR has occurred! \nexception: {str(e)}")
                     return
-            
+
                 # Unlock SearXNG after 10 sec
                 redis.expire("searxng_locked", 10)
 
@@ -447,7 +447,7 @@ if __name__ != "__main__":
         msg.fatal_error(f"Faild to connect DB! Exception: {str(e)}")
         sys.exit(1)
     else:
-        msg.info("Redis ok!")
+        msg.dbg("Redis ok!")
 
 
     # Load DB config from env
@@ -463,7 +463,7 @@ if __name__ != "__main__":
             sys.exit(1)
 
         # Connect to DB
-        msg.info("Connecting to DB...")
+        msg.dbg("Connecting to DB...")
 
         try:
             db = dataset.connect(f"postgresql://{db_user}:{db_passwd}@{db_host}/{db_name}")
@@ -473,7 +473,7 @@ if __name__ != "__main__":
             msg.fatal_error(f"Faild to connect DB! Exception: {str(e)}")
             sys.exit(1)
         else:
-            msg.info("DB connection is OK !")
+            msg.dbg("DB connection is OK !")
 
 
 if __name__ == "__main__":
