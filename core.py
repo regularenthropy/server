@@ -196,18 +196,25 @@ while True:
             msg.error(f"Monitoring error. A critical error was reported by another module ({should_i_die_reporter}).")
             suicide()
             sys.exit(1)
+
+        # サーバーメトリクス
+        try:
+            total_search_req = int(redis.get("metrics.total_search_req"))
+            archive_used = int(redis.get("metrics.archive_used"))
+            cache_used = int(redis.get("metrics.cache_used"))
+        
+            archive_hit_probability = archive_used / total_search_req * 100
+            cache_hit_probability = cache_used / total_search_req * 100
+        
+            msg.info(f"System metrics: total_search_req={str(total_search_req)} archive_hit_probability={archive_hit_probability}% cache_hit_probability={cache_hit_probability}%")
+        except TypeError:
+            pass
+
     except Exception as e:
         msg.error(f"Monitoring error. Failed to read value from Redis. Exit.  (Exception: {e})")
         suicide()
         sys.exit(1)
-    
-    # Check Redis 
-    try:
-        redis.set("test", "test")
-    except Exception as e:
-        msg.error(f"Monitoring error. Failed to write value to Redis. Exit.  (Exception: {e})")
-        suicide()
-        sys.exit(1)
+
     
     # Check SearXNG
     try:

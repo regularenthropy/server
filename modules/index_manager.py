@@ -69,8 +69,8 @@ else:
     msg.dbg("DB connection is OK !")
     
 while True:
-    time.sleep(21600)
-    msg.info("Checking index...")
+    time.sleep(54000)
+    msg.info("Updating index...")
     index.delete(query=None)
     index.delete(score=None)
     

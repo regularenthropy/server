@@ -399,6 +399,40 @@ class search:
                 msg.fatal_error(f"Database error has occurred! \nexception: {str(e)}")
             else:
                 msg.dbg("saved to DB")
+        
+        
+        try:
+            if not request_from_system:
+                total_search_req = int(redis.get("metrics.total_search_req"))
+                total_search_req += 1
+                redis.set("metrics.total_search_req", str(total_search_req))
+            
+                if archive_used:
+                    archive_used = int(redis.get("metrics.archive_used"))
+                    archive_used += 1
+                    redis.set("metrics.archive_used", str(archive_used))
+            
+                if cache_used:
+                    cache_used = int(redis.get("metrics.cache_used"))
+                    cache_used += 1
+                    redis.set("metrics.cache_used", str(cache_used))
+
+        except TypeError:
+            redis.set("metrics.total_search_req", "1")
+
+            if archive_used:
+                redis.set("metrics.archive_used", "1")
+            else:
+                redis.set("metrics.archive_used", "0")
+
+            if cache_used:
+                redis.set("metrics.cache_used", "1")
+            else:
+                redis.set("metrics.cache_used", "0")
+
+        except Exception as e:
+            msg.warn(f"An unexpected exception occurred during metric update. Exception: {e}")
+
 
 
 class status:
