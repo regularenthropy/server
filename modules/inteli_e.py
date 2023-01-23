@@ -6,8 +6,6 @@ import requests
 import json
 import ast
 
-import redis
-
 import msg
 
 
@@ -161,6 +159,7 @@ def get_train_info(query):
 
 def get_tsunami_info():
     try:
+        import redis
         redis = redis.Redis(host='127.0.0.1', port=6379, db=1)
         tsunami_result_str = redis.get("tsunami_status").decode("UTF-8")
         tsunami_result = ast.literal_eval(tsunami_result_str)
