@@ -162,7 +162,14 @@ class search:
             msg.dbg("Use default value (language)")
             language = "ja-JP"
 
-        msg.dbg(f"query={query}")
+        msg.dbg(f"raw query: {query}")
+
+        # キャッシュヒット率向上のために全角スペースを半角スペースに置き換え、連続したスペースを統合する 
+
+        query.replace("　", " ")
+        query = " ".join(query.split())
+        
+        msg.info(query)
 
         query_encoded = encode_query(query)
         msg.dbg(f"query_encoded={query_encoded}")
