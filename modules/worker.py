@@ -165,7 +165,6 @@ class search:
         msg.dbg(f"raw query: {query}")
 
         # キャッシュヒット率向上のために全角スペースを半角スペースに置き換え、連続したスペースを統合する 
-
         query.replace("　", " ")
         query = " ".join(query.split())
         
