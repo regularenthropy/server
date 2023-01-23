@@ -458,7 +458,7 @@ if __name__ != "__main__":
 
     # Load DB config from env
     if os.environ['FREA_ACTIVE_MODE'] == "true":
-        msg.info("Loading DB config...")
+        msg.dbg("Loading DB config...")
         try:
             db_host = os.environ['POSTGRES_HOST']
             db_name = os.environ['POSTGRES_DB']
