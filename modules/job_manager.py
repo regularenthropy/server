@@ -35,7 +35,7 @@ if memory_debug:
     import tracemalloc
 
 # Load DB config from env
-msg.info("Loading DB config...")
+msg.dbg("Loading DB config...")
 
 try:
     db_host = os.environ['POSTGRES_HOST']

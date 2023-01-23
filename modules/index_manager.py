@@ -31,7 +31,7 @@ import msg
 
 
 # Load DB config from env
-msg.info("Loading DB config...")
+msg.dbg("Loading DB config...")
 
 try:
     db_host = os.environ['POSTGRES_HOST']
@@ -46,7 +46,7 @@ db_url = f"postgresql://{db_user}:{db_passwd}@{db_host}/{db_name}"
 msg.dbg(f"DB url: postgresql://{db_user}:[!DB password was hidden for security!]@{db_host}/{db_name}")
 
 # Connect to DB
-msg.info("Connecting to DB...")
+msg.dbg("Connecting to DB...")
 
 
 # Config redis
