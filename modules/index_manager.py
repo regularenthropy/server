@@ -55,7 +55,7 @@ try:
 except Exception as e:
     msg.fatal_error(f"Faild to connect Redis! \nexception: {str(e)}")
 else:
-    msg.info("Redis ok!")
+    msg.dbg("Redis ok!")
 
 
 try:
@@ -66,7 +66,7 @@ except Exception as e:
     msg.fatal_error(f"Faild to connect DB! \nexception: {str(e)}")
     sys.exit(1)
 else:
-    msg.info("DB connection is OK !")
+    msg.dbg("DB connection is OK !")
     
 while True:
     time.sleep(21600)

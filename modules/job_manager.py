@@ -50,7 +50,7 @@ db_url = f"postgresql://{db_user}:{db_passwd}@{db_host}/{db_name}"
 msg.dbg(f"DB url: postgresql://{db_user}:[!DB password was hidden for security!]@{db_host}/{db_name}")
 
 # Connect to DB
-msg.info("Connecting to DB...")
+msg.dbg("Connecting to DB...")
 
 try:
     db = dataset.connect(db_url)
@@ -61,7 +61,7 @@ except Exception as e:
     msg.fatal_error(f"Faild to connect DB! \nexception: {str(e)}")
     sys.exit(1)
 else:
-    msg.info("DB connection is OK !")
+    msg.dbg("DB connection is OK !")
 
 try:
     job_queue.insert(dict(hash="TEST", result="{\"status\": \"OK\"}", archived=True, analyzed=1))
@@ -74,7 +74,7 @@ except Exception as e:
 
 if not os.path.exists("/app/mecab/dic_installed"):
     msg.info("Download MeCab dictionary for analyze")
-    _mecab_dic_dl_result = os.system("bash /app/modules/download_dic.sh")
+    _mecab_dic_dl_result = os.system("bash /app/modules/utils/download_dic.sh")
     if _mecab_dic_dl_result != 0:
         msg.fatal_error(f"Faild to download MeCab dictionary! \nExit code: {str(_mecab_dic_dl_result)}")
         sys.exit(1)
