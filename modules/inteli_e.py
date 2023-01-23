@@ -11,15 +11,6 @@ import redis
 import msg
 
 
-# Config redis
-try:
-    redis = redis.Redis(host='127.0.0.1', port=6379, db=1)
-except Exception as e:
-    msg.fatal_error(f"Faild to connect Redis! Exception: {str(e)}")
-    sys.exit(1)
-else:
-    msg.dbg("Redis ok!")
-
 '''
 def get_weather(query):
     import pygeonlp.api
@@ -170,18 +161,17 @@ def get_train_info(query):
 
 def get_tsunami_info():
     try:
+        redis = redis.Redis(host='127.0.0.1', port=6379, db=1)
         tsunami_result_str = redis.get("tsunami_status").decode("UTF-8")
         tsunami_result = ast.literal_eval(tsunami_result_str)
     except Exception as e:
         msg.error(f"Faild to get data from redis! Exception: {str(e)}")
         tsunami_result = {'no_tsunami': "true", 'error': "true"}
-    
+
     return tsunami_result
 
 
 def main(query):
-    msg.dbg("called inteli_e")
-
     msg.dbg("Check tsunami_info...")
     tsunami_info = get_tsunami_info()
 
