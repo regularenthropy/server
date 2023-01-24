@@ -353,16 +353,12 @@ class search:
                 answer_by_infobox = {'type': 'answer', 'answer': result["infoboxes"][0]["content"]}
                 result["answers"].insert(0, answer_by_infobox)
             except Exception as e:
-                #msg.warn(f"Exception: {e}")
+                msg.warn(f"Exception: {e}")
                 pass
 
         # Optimize infobox
         try:
-            del result["infoboxes"][0]["urls"]
-            del result["infoboxes"][0]["attributes"]
-            del result["infoboxes"][0]["engine"]
-            del result["infoboxes"][0]["engines"]
-            del result["infoboxes"][1:]
+            del result["infoboxes"]
         except:
             pass
 
