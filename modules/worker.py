@@ -172,7 +172,7 @@ class search:
         query_encoded = encode_query(query)
         msg.dbg(f"query_encoded={query_encoded}")
         
-        cache_key = f"cache,{category},{query_encoded},{pageno},{language}"
+        cache_key = f"cache/{category}/{query_encoded}/{pageno}/{language}"
         index_key = f"{category},{query_encoded},{pageno},{language}"
         
         try:
@@ -399,32 +399,32 @@ class search:
         
         try:
             if not request_from_system:
-                total_search_req = int(redis.get("metrics.total_search_req"))
+                total_search_req = int(redis.get("metrics/total_search_req"))
                 total_search_req += 1
-                redis.set("metrics.total_search_req", str(total_search_req))
+                redis.set("metrics/total_search_req", str(total_search_req))
             
                 if archive_used:
-                    archive_used = int(redis.get("metrics.archive_used"))
+                    archive_used = int(redis.get("metrics/archive_used"))
                     archive_used += 1
-                    redis.set("metrics.archive_used", str(archive_used))
+                    redis.set("metrics/archive_used", str(archive_used))
             
                 if cache_used:
-                    cache_used = int(redis.get("metrics.cache_used"))
+                    cache_used = int(redis.get("metrics/cache_used"))
                     cache_used += 1
-                    redis.set("metrics.cache_used", str(cache_used))
+                    redis.set("metrics/cache_used", str(cache_used))
 
         except TypeError:
-            redis.set("metrics.total_search_req", "1")
+            redis.set("metrics/total_search_req", "1")
 
             if archive_used:
-                redis.set("metrics.archive_used", "1")
+                redis.set("metrics/archive_used", "1")
             else:
-                redis.set("metrics.archive_used", "0")
+                redis.set("metrics/archive_used", "0")
 
             if cache_used:
-                redis.set("metrics.cache_used", "1")
+                redis.set("metrics/cache_used", "1")
             else:
-                redis.set("metrics.cache_used", "0")
+                redis.set("metrics/cache_used", "0")
 
         except Exception as e:
             msg.warn(f"An unexpected exception occurred during metric update. Exception: {e}")
@@ -466,7 +466,7 @@ app.add_route('/wp-admin', fckputin())
 
 
 if __name__ != "__main__":
-    msg.info("Starting....")
+    msg.dbg("Starting....")
 
     inteli_e_result = []
     

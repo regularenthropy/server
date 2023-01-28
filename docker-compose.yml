@@ -36,4 +36,3 @@ services:
       - POSTGRES_PASSWORD=MeaningOfLife
     volumes:
       - ./tmp/db:/var/lib/postgresql/data
-

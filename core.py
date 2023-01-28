@@ -199,9 +199,9 @@ while True:
 
         # サーバーメトリクス
         try:
-            total_search_req = int(redis.get("metrics.total_search_req"))
-            archive_used = int(redis.get("metrics.archive_used"))
-            cache_used = int(redis.get("metrics.cache_used"))
+            total_search_req = int(redis.get("metrics/total_search_req"))
+            archive_used = int(redis.get("metrics/archive_used"))
+            cache_used = int(redis.get("metrics/cache_used"))
         
             archive_hit_probability = archive_used / total_search_req * 100
             cache_hit_probability = cache_used / total_search_req * 100

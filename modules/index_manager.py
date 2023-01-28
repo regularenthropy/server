@@ -67,14 +67,16 @@ except Exception as e:
     sys.exit(1)
 else:
     msg.dbg("DB connection is OK !")
-    
+
+
+
 while True:
     time.sleep(54000)
     msg.info("Updating index...")
     index.delete(query=None)
     index.delete(score=None)
     
-    for _index in db['index']:
+    for _index in index:
         
         # Wait
         while True:
@@ -87,6 +89,8 @@ while True:
         
         # msg.dbg(f"index_info query:{_index['query']} resault:{_index['result']}")
         query = _index['query'].split(',')
+
+
         try:
             upstream_request = requests.get(f"http://127.0.0.1:8889/search?q={query[1]}&language={query[3]}&category={query[0]}&pageno={query[2]}&request_from_system={os.environ['FREA_SECRET']}")
             result = upstream_request.json()
@@ -99,3 +103,5 @@ while True:
             msg.dbg(str(result))
 
         time.sleep(60)
+
+    del _index
