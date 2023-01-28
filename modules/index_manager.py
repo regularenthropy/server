@@ -31,7 +31,7 @@ import msg
 
 
 # Load DB config from env
-msg.info("Loading DB config...")
+msg.dbg("Loading DB config...")
 
 try:
     db_host = os.environ['POSTGRES_HOST']
@@ -46,7 +46,7 @@ db_url = f"postgresql://{db_user}:{db_passwd}@{db_host}/{db_name}"
 msg.dbg(f"DB url: postgresql://{db_user}:[!DB password was hidden for security!]@{db_host}/{db_name}")
 
 # Connect to DB
-msg.info("Connecting to DB...")
+msg.dbg("Connecting to DB...")
 
 
 # Config redis
@@ -55,7 +55,7 @@ try:
 except Exception as e:
     msg.fatal_error(f"Faild to connect Redis! \nexception: {str(e)}")
 else:
-    msg.info("Redis ok!")
+    msg.dbg("Redis ok!")
 
 
 try:
@@ -66,11 +66,11 @@ except Exception as e:
     msg.fatal_error(f"Faild to connect DB! \nexception: {str(e)}")
     sys.exit(1)
 else:
-    msg.info("DB connection is OK !")
+    msg.dbg("DB connection is OK !")
     
 while True:
-    time.sleep(21600)
-    msg.info("Checking index...")
+    time.sleep(54000)
+    msg.info("Updating index...")
     index.delete(query=None)
     index.delete(score=None)
     

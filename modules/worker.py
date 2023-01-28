@@ -162,7 +162,12 @@ class search:
             msg.dbg("Use default value (language)")
             language = "ja-JP"
 
-        msg.dbg(f"query={query}")
+        msg.dbg(f"raw query: {query}")
+
+        # キャッシュヒット率向上のために全角スペースを半角スペースに置き換え、連続したスペースを統合する 
+        query.replace("　", " ")
+        query = " ".join(query.split())
+
 
         query_encoded = encode_query(query)
         msg.dbg(f"query_encoded={query_encoded}")
@@ -241,7 +246,7 @@ class search:
                     resp.body = json.dumps(result, ensure_ascii=False)
                     msg.fatal_error(f"UPSTREAM_ENGINE_ERROR has occurred! \nexception: {str(e)}")
                     return
-            
+
                 # Unlock SearXNG after 10 sec
                 redis.expire("searxng_locked", 10)
 
@@ -348,16 +353,12 @@ class search:
                 answer_by_infobox = {'type': 'answer', 'answer': result["infoboxes"][0]["content"]}
                 result["answers"].insert(0, answer_by_infobox)
             except Exception as e:
-                #msg.warn(f"Exception: {e}")
+                msg.warn(f"Exception: {e}")
                 pass
 
         # Optimize infobox
         try:
-            del result["infoboxes"][0]["urls"]
-            del result["infoboxes"][0]["attributes"]
-            del result["infoboxes"][0]["engine"]
-            del result["infoboxes"][0]["engines"]
-            del result["infoboxes"][1:]
+            del result["infoboxes"]
         except:
             pass
 
@@ -394,6 +395,40 @@ class search:
                 msg.fatal_error(f"Database error has occurred! \nexception: {str(e)}")
             else:
                 msg.dbg("saved to DB")
+        
+        
+        try:
+            if not request_from_system:
+                total_search_req = int(redis.get("metrics.total_search_req"))
+                total_search_req += 1
+                redis.set("metrics.total_search_req", str(total_search_req))
+            
+                if archive_used:
+                    archive_used = int(redis.get("metrics.archive_used"))
+                    archive_used += 1
+                    redis.set("metrics.archive_used", str(archive_used))
+            
+                if cache_used:
+                    cache_used = int(redis.get("metrics.cache_used"))
+                    cache_used += 1
+                    redis.set("metrics.cache_used", str(cache_used))
+
+        except TypeError:
+            redis.set("metrics.total_search_req", "1")
+
+            if archive_used:
+                redis.set("metrics.archive_used", "1")
+            else:
+                redis.set("metrics.archive_used", "0")
+
+            if cache_used:
+                redis.set("metrics.cache_used", "1")
+            else:
+                redis.set("metrics.cache_used", "0")
+
+        except Exception as e:
+            msg.warn(f"An unexpected exception occurred during metric update. Exception: {e}")
+
 
 
 class status:
@@ -447,12 +482,12 @@ if __name__ != "__main__":
         msg.fatal_error(f"Faild to connect DB! Exception: {str(e)}")
         sys.exit(1)
     else:
-        msg.info("Redis ok!")
+        msg.dbg("Redis ok!")
 
 
     # Load DB config from env
     if os.environ['FREA_ACTIVE_MODE'] == "true":
-        msg.info("Loading DB config...")
+        msg.dbg("Loading DB config...")
         try:
             db_host = os.environ['POSTGRES_HOST']
             db_name = os.environ['POSTGRES_DB']
@@ -463,7 +498,7 @@ if __name__ != "__main__":
             sys.exit(1)
 
         # Connect to DB
-        msg.info("Connecting to DB...")
+        msg.dbg("Connecting to DB...")
 
         try:
             db = dataset.connect(f"postgresql://{db_user}:{db_passwd}@{db_host}/{db_name}")
@@ -473,7 +508,7 @@ if __name__ != "__main__":
             msg.fatal_error(f"Faild to connect DB! Exception: {str(e)}")
             sys.exit(1)
         else:
-            msg.info("DB connection is OK !")
+            msg.dbg("DB connection is OK !")
 
 
 if __name__ == "__main__":

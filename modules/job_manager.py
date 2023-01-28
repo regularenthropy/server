@@ -28,14 +28,11 @@ import ast
 import dataset
 
 analyzer_version = 103
-memory_debug = False
 
 
-if memory_debug:
-    import tracemalloc
 
 # Load DB config from env
-msg.info("Loading DB config...")
+msg.dbg("Loading DB config...")
 
 try:
     db_host = os.environ['POSTGRES_HOST']
@@ -50,7 +47,7 @@ db_url = f"postgresql://{db_user}:{db_passwd}@{db_host}/{db_name}"
 msg.dbg(f"DB url: postgresql://{db_user}:[!DB password was hidden for security!]@{db_host}/{db_name}")
 
 # Connect to DB
-msg.info("Connecting to DB...")
+msg.dbg("Connecting to DB...")
 
 try:
     db = dataset.connect(db_url)
@@ -61,7 +58,7 @@ except Exception as e:
     msg.fatal_error(f"Faild to connect DB! \nexception: {str(e)}")
     sys.exit(1)
 else:
-    msg.info("DB connection is OK !")
+    msg.dbg("DB connection is OK !")
 
 try:
     job_queue.insert(dict(hash="TEST", result="{\"status\": \"OK\"}", archived=True, analyzed=1))
@@ -74,7 +71,7 @@ except Exception as e:
 
 if not os.path.exists("/app/mecab/dic_installed"):
     msg.info("Download MeCab dictionary for analyze")
-    _mecab_dic_dl_result = os.system("bash /app/modules/download_dic.sh")
+    _mecab_dic_dl_result = os.system("bash /app/modules/utils/download_dic.sh")
     if _mecab_dic_dl_result != 0:
         msg.fatal_error(f"Faild to download MeCab dictionary! \nExit code: {str(_mecab_dic_dl_result)}")
         sys.exit(1)
@@ -82,11 +79,6 @@ if not os.path.exists("/app/mecab/dic_installed"):
 
 
 while True:
-
-    if memory_debug:
-        tracemalloc.start()
-        snapshot1 = tracemalloc.take_snapshot()
-
     time.sleep(10)
     msg.dbg("Check job queue...")
     job_queue.delete(hash="TEST")
@@ -98,6 +90,9 @@ while True:
         msg.dbg("Loading result from job queue...")
         result_dict = ast.literal_eval(analyze_result["result"])
         
+        #TODO: 解析モジュールを分離して軽量化する
+        '''
+        # アナライザのバージョンが古いか0（未解析）の場合解析を行う
         if analyze_result["analyzed"] < analyzer_version :
             for chk_result in result_dict["results"]:
 
@@ -108,7 +103,9 @@ while True:
                 except KeyError:
                     _chk_content = None
 
+                # 結果のチェック
                 msg.dbg(f"Check result...url: {_chk_url}  title: {_chk_title}")
+
                 if analyze.chk_text(_chk_title) == 1:
                     msg.dbg(f"Suspicious site detected! url: {_chk_url}  title: {_chk_title}")
                     try:
@@ -129,14 +126,15 @@ while True:
                             db.rollback()
 
                 time.sleep(0.1)
+        '''
 
-        
+        # 応答しないエンジン数が多すぎる結果は破棄
         if len(result_dict["unresponsive_engines"]) >= 4:
             job_queue.delete(hash=analyze_result["hash"])
             break
 
         
-        # 既にインデックスに存在する項目を登録する場合、新たに検索を行い、応答しないエンジンが少ない方が優先されどちらも応答しないエンジンの数が同じなら新しい方を優先する。また何回も検索されているならスコアを上げる。
+        # 既にインデックスに存在する項目を登録する場合、応答しないエンジンが少ない方が優先されどちらも応答しないエンジンの数が同じなら新しい方を優先する。また何回も検索されているならスコアを上げる。
         try:
             if analyze_result["query"] != None:
 
@@ -172,14 +170,3 @@ while True:
         except Exception as e:
             msg.fatal_error(f"Faild to save index to DB. \nException: {e}")
             db.rollback()
-
-    if memory_debug:
-        snapshot2 = tracemalloc.take_snapshot()
-        top_stats = snapshot2.compare_to(snapshot1, 'traceback')
-
-        print("[ Memory Analysis ]")
-        for stat in top_stats[:10]:
-            print(stat)
-            for line in stat.traceback.format():
-                print(line)
-        print("=====")

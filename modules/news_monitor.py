@@ -45,7 +45,7 @@ except Exception as e:
     msg.fatal_error(f"Faild to connect Redis! Exception: {str(e)}")
     sys.exit(1)
 else:
-    msg.info("Redis ok!")
+    msg.dbg("Redis ok!")
 
 
 while True:
