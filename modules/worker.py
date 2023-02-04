@@ -49,9 +49,9 @@ encode_query = urllib.parse.quote
 class chk:
     @staticmethod
     def is_in_untrusted_domain(root_domain, domain):
-        if redis.exists(f"blocklists.untrusted.{root_domain}"):
+        if redis.exists(f"blocklists/untrusted/{root_domain}"):
             return True
-        elif redis.exists(f"blocklists.untrusted.{domain}"):
+        elif redis.exists(f"blocklists/untrusted/{domain}"):
             return True
         else:
             return False
@@ -95,10 +95,10 @@ class chk:
 
     @staticmethod
     def chk_domain(root_domain, domain):
-        if redis.exists(f"blocklists.domain.{root_domain}"):
+        if redis.exists(f"blocklists/domain/{root_domain}"):
             msg.dbg(f"Block domain in root_domain ({root_domain}) !!!")
             return True
-        elif redis.exists(f"blocklists.domain.{domain}"):
+        elif redis.exists(f"blocklists/domain/{domain}"):
             msg.dbg(f"Block domain in domain ({domain}) !!!")
             return True
         else:

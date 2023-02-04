@@ -7,11 +7,11 @@ import yaml
 import msg
 
 try:
-    with open(f"blocklists/main.yml", "r", encoding="utf8") as yml:
+    with open("blocklists/main.yml", "r", encoding="utf8") as yml:
         load_block_domains = yaml.safe_load(yml)
         block_domains = load_block_domains["domains"]
 
-    with open(f"blockwords/untrusted_domains.yml", "r", encoding="utf8") as yml:
+    with open("blockwords/untrusted_domains.yml", "r", encoding="utf8") as yml:
         load_untrusted_domains = yaml.safe_load(yml)
         untrusted_domains = load_untrusted_domains["domains"]
 
@@ -31,10 +31,10 @@ else:
 
 msg.info(f"Loading {len(block_domains)} block_domains...")
 for _block_domain in block_domains :
-    redis.set(f"blocklists.domain.{_block_domain}", "all")
+    redis.set(f"blocklists/domain/{_block_domain}", "all")
 
 msg.info(f"Loading {len(untrusted_domains)} untrusted_domains...")
 for _untrusted_domain in untrusted_domains :
-    redis.set(f"blocklists.untrusted.{_untrusted_domain}", "all")
+    redis.set(f"blocklists/untrusted/{_untrusted_domain}", "all")
 
 sys.exit(0)
