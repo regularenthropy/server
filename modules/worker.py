@@ -353,7 +353,8 @@ class search:
                 answer_by_infobox = {'type': 'answer', 'answer': result["infoboxes"][0]["content"]}
                 result["answers"].insert(0, answer_by_infobox)
             except Exception as e:
-                msg.warn(f"Exception: {e}")
+                # For Debug
+                # msg.warn(f"Exception: {e}")
                 pass
 
         # Optimize infobox
