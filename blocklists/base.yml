@@ -2155,3 +2155,15 @@ domains:
   - togetter.com
   - ffwpu.jp
   - similarweb.com
+  - theregister.com
+  - enterprisezine.jp
+  - jugem.jp
+  - cocolog-nifty.com
+  - nicovideo.jp
+  # パスでのブロックを将来的にサポートしたら上記のルールは消す
+  # - nicovideo.jp/tag
+  # - nicovideo.jp/watch
+  - deeksha777.blog88.fc2.com
+  - blog88.fc2.com
+  - 076.ne.jp
+  - social.076.ne.jp
