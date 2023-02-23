@@ -3,6 +3,14 @@
  */
 package org.freasearch.search
 
+import io.ktor.server.application.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
+
+import org.freasearch.search.logger.*
+import org.freasearch.search.router.*
+
+
 class App {
     val greeting: String
         get() {
@@ -11,5 +19,13 @@ class App {
 }
 
 fun main() {
-    println(App().greeting)
+    msg_info("DEBUG LOG")
+    msg_error("DEBUG ERROR")
+    msg_warn("DEBUG WARN")
+    embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
+        .start(wait = true)
+}
+
+fun Application.module() {
+    configureRouting()
 }
