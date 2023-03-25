@@ -35,7 +35,7 @@ import redis
 aa = Figlet(font="slant")
 welcome_aa = aa.renderText("Frea Search")
 
-print("Frea Search API Server ver.4.30 (codename: Day Cat)\n")
+print("Frea Search API Server ver.4.31 (codename: Day Cat)\n")
 print(welcome_aa)
 print("\n(c) 2022-2023 nexryai\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details.\n\n")
 
