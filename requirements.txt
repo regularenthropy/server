@@ -3,7 +3,7 @@ uvicorn==0.21.1
 requests==2.28.2
 tldextract==3.4.0
 pyyaml==6.0
-redis==4.5.3
+redis==4.5.4
 #pygeonlp
 feedparser==6.0.10
 pyfiglet==0.8.post1
