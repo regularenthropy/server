@@ -29,4 +29,4 @@ RUN rm -rf requirements.txt \
  && chown app:app -R /app
 
 USER app
-CMD ["tini", "--", "/usr/bin/python3", "-u", "/app/core.py"]
+CMD ["tini", "--", "/usr/bin/python3", "-u", "/app/src/boot.py"]
