@@ -62,21 +62,9 @@ chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
 os.environ['FREA_SECRET'] = ''.join(secrets.choice(chars) for i in range(20))
 
 
-def start_nginx():
-    msg.info("Starting nginx....")
-    os.system("python3 -u modules/nginx.py")
-
 def start_search_api_server():
     msg.info("Starting search API server workers....")
     os.system("python3 -u modules/worker.py")
-
-def start_searxng():
-    msg.info("Starting SearXNG....")
-    os.system("python3 -u modules/searx.py")
-
-def start_redis():
-    msg.info("Starting redis....")
-    os.system("python3 -u modules/redis_server.py")
 
 def start_job_manager():
     os.system("python3 -u modules/job_manager.py")
@@ -88,21 +76,9 @@ def start_news_monitor():
     os.system("python3 -u modules/news_monitor.py")
 
 
-# Start nginx
-nginx_server_thread = multiprocessing.Process(target=start_nginx)
-nginx_server_thread.start()
-
 # Start API server
 search_server_thread = multiprocessing.Process(target=start_search_api_server)
 search_server_thread.start()
-
-# Start searx
-searx_server_thread = multiprocessing.Process(target=start_searxng)
-searx_server_thread.start()
-
-# Start redis
-redis_server_thread = multiprocessing.Process(target=start_redis)
-redis_server_thread.start()
 
 # Start news_monitor
 news_monitor_thread = multiprocessing.Process(target=start_news_monitor)
@@ -134,24 +110,9 @@ msg.info("Starting error monitor...")
 
 def suicide():
     #FIXME: なんかもっと良い書き方あると思うけどどっかで失敗しても処理を続ける方法がこれしか分からん。
-
-    try:
-        nginx_server_thread.terminate()
-    except:
-        pass
     
     try:
         search_server_thread.terminate()
-    except:
-        pass
-    
-    try:
-        searx_server_thread.terminate()
-    except:
-        pass
-    
-    try:
-        redis_server_thread.terminate()
     except:
         pass
     
@@ -212,19 +173,6 @@ while True:
 
     except Exception as e:
         msg.error(f"Monitoring error. Failed to read value from Redis. Exit.  (Exception: {e})")
-        suicide()
-        sys.exit(1)
-
-    
-    # Check SearXNG
-    try:
-        test_req = requests.get('http://127.0.0.1:8888/healthz')
-        if test_req.status_code != requests.codes.ok :
-            msg.fatal_error(f"Monitoring error. SearXNG health check page returned http status ({test_req.status_code}).")
-            suicide()
-            sys.exit(1)
-    except Exception as e:
-        msg.error(f"Monitoring error. SearXNG health check failed. Exit.  (Exception: {e})")
         suicide()
         sys.exit(1)
     
