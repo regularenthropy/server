@@ -9,6 +9,7 @@ feedparser==6.0.10
 pyfiglet==0.8.post1
 dataset==1.6.0
 psycopg2-binary==2.9.5
+googlesearch-python==1.2.3
 
 numpy==1.24.2
 demoji==1.1.0
