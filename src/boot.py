@@ -18,10 +18,9 @@ along with Frea Search. If not, see < http://www.gnu.org/licenses/ >.
                    nexryai <gnomer@tuta.io>
 '''
 
-from modules import msg
-
 import os
 import sys
+
 from pyfiglet import Figlet
 import threading
 import multiprocessing
@@ -31,6 +30,13 @@ import time
 import requests
 import redis
 
+from modules import core
+msg = core.log()
+
+
+import service
+
+news_service = service.newsService()
 
 aa = Figlet(font="slant")
 welcome_aa = aa.renderText("Frea Search")
@@ -39,21 +45,19 @@ print("Frea Search API Server ver.4.31 (codename: Day Cat)\n")
 print(welcome_aa)
 print("\n(c) 2022-2023 nexryai\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details.\n\n")
 
-try:
-    debug_mode = os.environ['FREA_DEBUG_MODE']
-except KeyError:
-    msg.warn("FREA_DEBUG_MODE is undefined.")
-    os.environ['FREA_DEBUG_MODE'] = "false"
 
+# Config and check redis
+msg.info("Checking redis...")
 
 try:
-    use_active_mode = os.environ['POSTGRES_HOST']
-except KeyError:
-    msg.fatal_error("PostgreSQL is not configured.")
+    redis = redis.Redis(host=core.config.redis.host, port=6379, db=1)
+    if not redis.exists("should_i_die"):
+        redis.set("should_i_die", "false")
+except Exception as e:
+    msg.fatal_error(f"Faild to connect Redis! Exception: {str(e)}")
     sys.exit(1)
 else:
-    msg.info("PostgreSQL is configured.")
-    os.environ['FREA_ACTIVE_MODE'] = "true"
+    pass
 
 
 # Set system secret key
@@ -62,40 +66,25 @@ chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
 os.environ['FREA_SECRET'] = ''.join(secrets.choice(chars) for i in range(20))
 
 
-def start_search_api_server():
-    msg.info("Starting search API server workers....")
-    os.system("python3 -u modules/worker.py")
-
-def start_job_manager():
-    os.system("python3 -u modules/job_manager.py")
-
-def start_index_manager():
-    os.system("python3 -u modules/index_manager.py")
-
-def start_news_monitor():
-    os.system("python3 -u modules/news_monitor.py")
-
-
 # Start API server
-search_server_thread = multiprocessing.Process(target=start_search_api_server)
-search_server_thread.start()
+#search_server_thread = multiprocessing.Process(target=start_search_api_server)
+#search_server_thread.start()
 
 # Start news_monitor
-news_monitor_thread = multiprocessing.Process(target=start_news_monitor)
+news_monitor_thread = multiprocessing.Process(target=news_service.start())
 news_monitor_thread.start()
 
 
-if os.environ['FREA_ACTIVE_MODE'] == "true" :
-    msg.info("Starting job manager...")
-    job_manager_thread = multiprocessing.Process(target=start_job_manager)
-    job_manager_thread.start()
-    
-    msg.info("Starting index manager...")
-    index_manager_thread = multiprocessing.Process(target=start_index_manager)
-    index_manager_thread.start()
+msg.info("Starting job manager...")
+#job_manager_thread = multiprocessing.Process(target=start_job_manager)
+#job_manager_thread.start()
+
+msg.info("Starting index manager...")
+#index_manager_thread = multiprocessing.Process(target=start_index_manager)
+#index_manager_thread.start()
 
 
-time.sleep(1)
+time.sleep(60)
 
 # Run blocklists_loader.py
 _blocklists_loader_result = os.system("python3 -u modules/blocklists_loader.py")
@@ -130,19 +119,6 @@ def suicide():
         index_manager_thread.terminate()
     except:
         pass
-
-
-# Config redis
-try:
-    redis = redis.Redis(host='127.0.0.1', port=6379, db=1)
-    if not redis.exists("should_i_die"):
-        redis.set("should_i_die", "false")
-except Exception as e:
-    msg.fatal_error(f"Faild to connect Redis! Exception: {str(e)}")
-    suicide()
-    sys.exit(1)
-else:
-    pass
 
 
 while True:
