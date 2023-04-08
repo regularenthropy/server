@@ -14,16 +14,22 @@ class PostgresConfig:
     host = os.getenv("POSTGRES_HOST", "127.0.0.1")
     port = os.getenv("POSTGRES_PORT", "5432")
 
-config = {
-    "system": BaseConfig,
-    "redis": RedisConfig,
-    "db": PostgresConfig
-}
+class Config:
+    base = BaseConfig
+    redis = RedisConfig
+    db = PostgresConfig
+
+config = Config()
 
 
 class log:
     def __init__(self):
         self.target_file = os.path.splitext(os.path.basename(inspect.stack()[1].filename))[0]
+
+        if config.base.debug_mode == "true":
+            self._debug_mode = True
+        else:
+            self._debug_mode = False
 
     def info(self, message):
         sys.stdout.write(f"[{self.target_file}]\033[32;1m [INFO]\033[0m " + str(message) + "\n")
@@ -32,7 +38,7 @@ class log:
         sys.stdout.write(f"[{self.target_file}]\033[33;1m [WARNING]\033[0m " + str(message) + "\n")
 
     def dbg(self, message):
-        if os.environ['FREA_DEBUG_MODE'] == "true":
+        if self._debug_mode:
             sys.stdout.write(f"[{self.target_file}]\033[90;1m [DEBUG] @{time.time()}\033[0m " + str(message) + "\n")
 
     def error(self, message):

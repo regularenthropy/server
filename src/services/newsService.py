@@ -6,6 +6,7 @@ import redis
 
 from modules import core
 
+msg = core.log()
 
 def get_tsunami_info():
     api_url = 'https://api.p2pquake.net/v2/jma/tsunami?limit=1&offset=0&order=-1'
@@ -36,12 +37,15 @@ def get_tsunami_info():
     
     return response
 
-def main_loop():
+def start():
+    #FIXME: ここにこれがないとエラーになる
+    import redis
+
     msg.info("Starting news_monitor")
 
     # Config redis
     try:
-        redis = redis.Redis(host='127.0.0.1', port=6379, db=1)
+        redis = redis.Redis(host=core.config.redis.host, port=core.config.redis.port, db=1)
     except Exception as e:
         msg.fatal_error(f"Faild to connect Redis! Exception: {str(e)}")
         sys.exit(1)

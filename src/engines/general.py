@@ -23,7 +23,6 @@ async def get_result_from_external_engines():
     tasks = []
     query = "systemd"
     
-    # 複数の関数を非同期で実行するため、タスクを生成する
     tasks.append(asyncio.create_task(get_from_google(query)))
     tasks.append(asyncio.create_task(get_from_goo(query)))
     

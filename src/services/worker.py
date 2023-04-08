@@ -136,7 +136,7 @@ class search:
             resp.status = falcon.HTTP_400
             resp.body = json.dumps(result, ensure_ascii=False)
             return
-        
+
         try:
             pageno = params["pageno"]
         except:

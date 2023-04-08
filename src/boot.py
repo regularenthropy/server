@@ -34,9 +34,7 @@ from modules import core
 msg = core.log()
 
 
-import service
-
-news_service = service.newsService()
+from services import newsService
 
 aa = Figlet(font="slant")
 welcome_aa = aa.renderText("Frea Search")
@@ -50,7 +48,7 @@ print("\n(c) 2022-2023 nexryai\nThis program is distributed in the hope that it 
 msg.info("Checking redis...")
 
 try:
-    redis = redis.Redis(host=core.config.redis.host, port=6379, db=1)
+    redis = redis.Redis(host=core.config.redis.host, port=core.config.redis.port, db=1)
     if not redis.exists("should_i_die"):
         redis.set("should_i_die", "false")
 except Exception as e:
@@ -71,7 +69,7 @@ os.environ['FREA_SECRET'] = ''.join(secrets.choice(chars) for i in range(20))
 #search_server_thread.start()
 
 # Start news_monitor
-news_monitor_thread = multiprocessing.Process(target=news_service.start())
+news_monitor_thread = multiprocessing.Process(target=newsService.start())
 news_monitor_thread.start()
 
 
