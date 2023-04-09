@@ -4,7 +4,7 @@ import json
 import time
 import redis
 
-from modules import core
+from lib import core
 
 msg = core.log()
 

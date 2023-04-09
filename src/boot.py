@@ -30,16 +30,16 @@ import time
 import requests
 import redis
 
-from modules import core
+from lib import core
 msg = core.log()
 
 
 from services import newsService
 
 aa = Figlet(font="slant")
-welcome_aa = aa.renderText("Frea Search")
+welcome_aa = aa.renderText("Frea API")
 
-print(f"Frea Search API Server ver.{core.info.server.version} (codename: {core.info.server.codename})\n")
+print(f"Frea API Server ver.{core.info.server.version} (codename: {core.info.server.codename})\n")
 print(welcome_aa)
 print("\n(c) 2022-2023 nexryai\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details.\n\n")
 
