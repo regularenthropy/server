@@ -3,21 +3,34 @@ import os
 import time
 import inspect
 
-class BaseConfig:
+
+# Software informations
+class serverVersion:
+    version = "5.00"
+    codename = "Spring Rain"
+
+class softwareInfo:
+    server = serverVersion
+
+info = softwareInfo()
+
+
+# Config
+class baseConfig:
     debug_mode = os.getenv("FREA_DEBUG_MODE", "false")
 
-class RedisConfig:
+class redisConfig:
     host = os.getenv("REDIS_HOST", "127.0.0.1")
     port = os.getenv("REDIS_PORT", "6379")
 
-class PostgresConfig:
+class postgresConfig:
     host = os.getenv("POSTGRES_HOST", "127.0.0.1")
     port = os.getenv("POSTGRES_PORT", "5432")
 
 class Config:
-    base = BaseConfig
-    redis = RedisConfig
-    db = PostgresConfig
+    base = baseConfig
+    redis = redisConfig
+    db = postgresConfig
 
 config = Config()
 
