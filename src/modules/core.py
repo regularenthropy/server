@@ -27,12 +27,12 @@ class postgresConfig:
     host = os.getenv("POSTGRES_HOST", "127.0.0.1")
     port = os.getenv("POSTGRES_PORT", "5432")
 
-class Config:
+class configuration:
     base = baseConfig
     redis = redisConfig
     db = postgresConfig
 
-config = Config()
+config = configuration()
 
 
 class log:
